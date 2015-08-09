@@ -19,7 +19,7 @@ exit_usage () {
 }
 
 [[ $# -lt 1 ]] && exit_usage
-[[ $(whoami) = "root" ]] && root=1
+[[ "$(whoami)" = "root" ]] && root=1
 op="$1"; path="$2"
 
 if [[ ! "$path" ]]; then
@@ -30,7 +30,7 @@ if [[ ! "$path" ]]; then
     fi
 fi
 if [[ "$path" = "${HOME}"* ]]; then bin_dir="$HOME/bin"
-else bin_dir=$(readlink -f "$path/../../bin"); fi
+else bin_dir="$(readlink -f "$path/../../bin")"; fi
 if [[ "$root" ]]; then menu_dir="/etc/xdg/menus/applications-merged"
 else
     [[ -d "$XDG_CONFIG_HOME" ]] && \
@@ -38,7 +38,7 @@ else
      menu_dir="$HOME/.config/menus/applications-merged"
 fi
 
-cd $(dirname $(readlink -f "$0"))
+cd "$(dirname "$(readlink -f "$0")")"
 case "$1" in
 install)
     export SIMPLE_BACKUP_SUFFIX="off"
@@ -57,7 +57,7 @@ install)
     ;;
 install-icons)
     for i in icons/*; do
-        i=$(basename $i)
+        i="$(basename $i)"
         xdg-icon-resource install --novendor --size 48 icons/$i arcadia-${i%.*}
     done
     ;;
@@ -77,7 +77,7 @@ uninstall)
     ;;
 uninstall-icons)
     for i in icons/*; do
-        i=$(basename $i)
+        i="$(basename $i)"
         xdg-icon-resource uninstall --size 48 arcadia-${i%.*}
     done
     ;;

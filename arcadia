@@ -9,10 +9,10 @@ set -o allexport +o monitor
 export SHELLOPTS
 
 # Find Arcadia.
-arcadia_bin=$(readlink -f "$0")
-this_dir=$(dirname "$arcadia_bin")
+arcadia_bin="$(readlink -f "$0")"
+this_dir="$(dirname "$arcadia_bin")"
 for arcadia_dir in "$arcadia_path" "$ARCADIA_PATH" "$this_dir" \
- $(readlink -f "$this_dir/../share/arcadia") "$XDG_DATA_HOME/arcadia" \
+ "$(readlink -f "$this_dir/../share/arcadia")" "$XDG_DATA_HOME/arcadia" \
  "$HOME/.local/share/arcadia"; do if [[ -f "$arcadia_dir/runners/pc" ]]; then
     arcadia_path="$arcadia_dir"
     break
@@ -36,6 +36,6 @@ for modules_dir in "$arcadia_path" "$XDG_DATA_HOME/arcadia" \
  "$HOME/.local/share/arcadia"; do if [[ -x "$modules_dir/modules/$cmd" ]]; then
     # This is important so that scripts can detect if Arcadia's x server is
     # running; the most reliable way to do that is pgrep -f arcxinit.
-    exec $(readlink -f "$modules_dir/modules/$module") "$@"
+    exec "$(readlink -f "$modules_dir/modules/$module")" "$@"
 fi; done
 die "Module $cmd not found."

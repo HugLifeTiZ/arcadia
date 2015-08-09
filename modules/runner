@@ -2,9 +2,9 @@
 # Receives the full path to a game to run, and runs it.
 [[ "$arcadia_loaded" ]] || { echo "Arcadia not loaded."; exit 1; }
 
-game=$(readlink -f "$1")
-check_platform! $(dirname "$game")
-load_platform $(dirname "$game")
+game="$(readlink -f "$1")"
+check_platform! "$(dirname "$game")"
+load_platform "$(dirname "$game")"
 load_game "$game"
 include /tmp/arcadia-session.meta  # Temporary file that launchers can make.
 set_runner $platform

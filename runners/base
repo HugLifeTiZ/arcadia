@@ -20,7 +20,7 @@ psp_runners="ppsspp jpcsp"
 
 # Set runner based on requested platform.
 set_runner () {
-    [[ $(type -t game_exec) = "function" ]] && return 0
+    [[ "$(type -t game_exec)" = "function" ]] && return 0
     case $1 in
     linux)
         game_exec () { runner_linux ; }

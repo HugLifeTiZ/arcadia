@@ -17,7 +17,7 @@ runner_steam () {
         debug_print "Steam not running; starting background process to kill it"
         steam_pid=""
         while [[ -z "$steam_pid" ]]; do
-            steam_pid=$(pgrep -n 'SteamChildMonit')
+            steam_pid="$(pgrep -n 'SteamChildMonit')"
             sleep 1
         done
         debug_print "Child monitor PID is $steam_pid"
@@ -31,8 +31,8 @@ runner_steam () {
 runner_steam_wine () {
     # So far, this is the only runner that needs a special find routine.
     if [[ ! -e "$steam_wine_bin" ]]; then
-        steam_wine_bin=$(find "$HOME/.wine/drive_c" -type f \
-         -name "[Ss]team.exe" | head -n1)
+        steam_wine_bin="$(find "$HOME/.wine/drive_c" -type f \
+         -name "[Ss]team.exe" | head -n1)"
     fi
     [[ -e "$steam_wine_bin" ]] || die "Can't find Wine Steam"
     if ! pgrep '[Ss]team\.exe'; then
@@ -40,7 +40,7 @@ runner_steam_wine () {
         debug_print "Steam not running; starting background process to kill it"
         pid=""
         while [[ -z "$pid" ]]; do
-            PID=$(pgrep -n "${file/./\\.}")
+            PID="$(pgrep -n "${file/./\\.}")"
             sleep 1
         done
         debug_print "Game process PID is $pid"
