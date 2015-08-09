@@ -59,8 +59,8 @@ bin! () { bin "$@" || die "Couldn't find $1"; }
 # Shushes a command. All output directed to /dev/null.
 shh () { "$@" >/dev/null 2>&1; }
 
-# Returns true if a value is in the given array.
-val_in_array () {
+# Returns true if a value is in the given list.
+val_in_list () {
     local e
     for e in "${@:2}"; do [[ "$e" == "$1" ]] && return 0; done
     return 1

@@ -47,25 +47,25 @@ load_platform () {
 get_exts () {
     case "$1" in
     linux)
-        exts=(sh)
+        exts="sh"
         case "$(uname -m)" in
-        x86_64) exts+=(x86_64 x64) ;&
-        i?86)   exts+=(x86) ;;
+        x86_64) exts+="x86_64 x64" ;&
+        i?86)   exts+="x86" ;;
         esac
-        exts+=(bin run)
+        exts+="bin run"
         ;;
     win)  ;&
-    dos)  exts=(bat exe BAT EXE) ;;
-    nes)  exts=(nes) ;;
-    gen)  exts=(smd bin) ;;
-    snes) exts=(smc sfc) ;;
-    n64)  exts=(n64 z64) ;;
+    dos)  exts="bat exe BAT EXE" ;;
+    nes)  exts="nes" ;;
+    gen)  exts="smd bin" ;;
+    snes) exts="smc sfc" ;;
+    n64)  exts="n64 z64" ;;
     sat|sdc|psx|ps2|xbox|gcn|wii|psp)
-          exts=(cue iso bin) ;;
-    gb)   exts=(gb) ;;
-    gg)   exts=(gg) ;;
-    gba)  exts=(gba) ;;
-    nds)  exts=(nds) ;;
+          exts="cue iso bin" ;;
+    gb)   exts="gb" ;;
+    gg)   exts="gg" ;;
+    gba)  exts="gba" ;;
+    nds)  exts="nds" ;;
     esac
 }
 
@@ -73,10 +73,10 @@ is_game () {
     local game="$(readlink -f "$1")"
     local base="$(basename "$game")"
     [[ "$base" =~ ^\. ]] && return 1
-    [[ "$base" = "arc"*"platform.meta" ]] && return 1
+    [[ "$base" = "arcadia-platform.meta" ]] && return 1
     [[ "$base" = @(icons|boxarts|screenshots) ]] && return 1
     ( [[ -d "$game" ]] || [[ "${game##*.}" = "meta" ]] || \
-     val_in_array "${game##*.}" exts ) || return 1
+     val_in_list "${game##*.}" $exts ) || return 1
     return 0
 }
 

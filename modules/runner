@@ -5,7 +5,7 @@
 game="$(readlink -f "$1")"
 check_platform! "$(dirname "$game")"
 load_platform "$(dirname "$game")"
-load_game "$game"
+load_game "$game" || die "Failed to load $game."
 include /tmp/arcadia-session.meta  # Temporary file that launchers can make.
 set_runner $platform
 [[ "$steam_id" ]] || find_file

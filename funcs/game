@@ -6,7 +6,7 @@ find_file () {
     [[ -f "$dir/$file" ]] && return 0
     file="$(basename "$(readlink -f "$dir/arcadia-game")")"
     [[ -f "$dir/$file" ]] && return 0
-    for e in "${exts[@]}"; do
+    for e in $exts; do
         file="$(find "$dir" -name "*.$e" -printf "%f\n" | head -n1)"
         [[ -f "$dir/$file" ]] && return 0
     done
