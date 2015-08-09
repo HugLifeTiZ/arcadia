@@ -1,0 +1,94 @@
+#!/bin/bash
+# Functions related to configuring displays.
+
+config_outputs () {
+    detect_outputs
+    detect_mode
+    config_mode
+    is $xinit && arrange_outputs
+    (is $xinit || is $move_mouse) && xdotool mousemove 9999 9999
+}
+
+detect_outputs () {
+    conn_outputs="$(xrandr | sed -nr 's:^(.*) conn.*:\1:p')"
+    [[ "$outputs" ]] || outputs="$conn_outputs"
+    for output in $outputs; do
+        if echo "$conn_outputs" | shh grep "$output"; then
+            main_output="$output"; break
+        fi
+    done
+    debug_print "Main output detected as $main_output"
+    custom_mode="$(eval "echo \$mode_${main_output,,}")"
+    [[ "$custom_mode" ]] && \
+     xrandr --output $main_output --primary --mode $custom_mode || \
+     xrandr --output $main_output --primary --preferred
+}
+
+detect_mode () {
+    main_mode="$(xrandr | sed -nr "s:$main_output.* ([0-9]+x[0-9]+).*:\1:p")"
+    main_width="$(echo $main_mode | cut -dx -f1)"
+    main_height="$(echo $main_mode | cut -dx -f2)"
+    main_aspect=$((($main_width * 100) / $main_height))
+    debug_print "Detected $main_mode with aspect $main_aspect"
+}
+
+config_mode () {
+    if [[ "$scale_height" ]]; then
+        if [[ ! "$scale_width" ]]; then
+            debug_print "Inferring scale width using aspect ratio"
+            scale_width="$(python -c "
+from math import ceil
+print int(ceil($main_width.0 / $main_height * $scale_height))")"
+        fi
+        debug_print "Scaling display to ${scale_width}x${scale_height}"
+        main_mode="${scale_width}x${scale_height}"
+        xrandr --output "$main_output" --scale-from "$main_mode"
+    elif [[ "$mode" ]]; then
+        debug_print "Setting mode on $output to $mode"
+        xrandr --output "$main_output" --mode "$mode"
+        main_mode="$mode"
+    fi
+}
+
+arrange_outputs () {
+    [[ $(echo $conn_outputs | wc -w) -le 1 ]] && return 0
+    local xrandr_args=()
+    for output in $conn_outputs; do
+        if [[ "$output" != "$main_output" ]]; then
+            xrandr_args+=(--output $output)
+            is $clone_output && xrandr_args+=(--same-as $main_output \
+             --scale-from "$main_mode")
+            is $single_output && xrandr_args+=(--off)
+        fi
+    done
+    xrandr "${xrandr_args[@]}"
+}
+
+restore_mode () {
+    debug_print "Restoring monitor mode configuration."
+    if [[ "$restore_mode" ]] || [[ "$restore_scale" ]] \
+     || [[ "$restore_scale_from" ]]; then
+        if [[ "$restore_scale_from" ]]; then
+            local scale_args=(--scale-from "$restore_scale_from")
+        elif [[ "$restore_scale" ]]; then
+            local scale_args=(--scale "$restore_scale")
+        fi
+        if [[ "$restore_mode" ]]; then local mode_args=(--mode "$restore_mode")
+        else local mode_args=(--preferred); fi
+        xrandr --output "$main_output" "${mode_args[@]}" "${scale_args[@]}"
+    else xrandr --output "$main_output" --preferred --scale 1x1; fi
+}
+
+disable_blanking () {
+    debug_print "Disabling screen blanking"
+    xset s noblank
+    xset s off
+    xset -dpms
+}
+
+restore_blanking () {
+    debug_print "Restoring screen blanking"
+    xset s blank
+    xset s on
+    xset +dpms
+}

@@ -1,0 +1,25 @@
+#!/bin/bash
+# Functions for the desktop generator.
+
+gen_directory () {
+    sed -e "s|%name%|$plat_base|g" -e "s|%platform%|$platform|g" \
+     -e "s|%icon%|$arcadia_path/icons/$platform.png|g" \
+     "$arcadia_path/data/platform-template.directory" > "$1"
+}
+
+gen_desktop () {
+    local gen_out=""; local gen_cat="";
+    for g in "${genres[@]}"; do gen_out+="$g;"; gen_cat+="X-Arcadia-$g;"; done
+    find_image icon || icon="arcadia-$platform"
+    find_image boxart
+    find_image screenshot
+    sed -e "s|%name%|$name|g" -e "s|%game%|$game|g" -e "s|%icon%|$icon|g" \
+     -e "s|%boxart%|$boxart|g" -e "s|%screenshot%|$screenshot|g" \
+     -e "s|%platform%|$platform|g" -e "s|%genres%|$gen_out|g" \
+     -e "s|%arcgenres%|$gen_cat|g" -e "s|%arcbin%|$arcadia_bin|g" \
+     "$arcadia_path/data/game-template.desktop" > "$1"
+}
+
+clear_game () {
+    unset name genres dgpu padfile icon boxart screenshot
+}

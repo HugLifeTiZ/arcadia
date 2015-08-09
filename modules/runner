@@ -1,0 +1,17 @@
+#!/bin/bash
+# Receives the full path to a game to run, and runs it.
+[[ "$arcadia_loaded" ]] || { echo "Arcadia not loaded."; exit 1; }
+
+game="$(readlink -f "$1")"
+check_platform! "$(dirname "$game")"
+load_platform "$(dirname "$game")"
+load_game "$game"
+include /tmp/arcadia-session.meta  # Temporary file that launchers can make.
+set_runner $platform
+[[ "$steam_id" ]] || find_file
+fn runner_before
+disable_blanking
+if is $xinit; then "$arcadia_bin" xinit run_game; else run_game; fi
+restore_blanking
+fn runner_after
+[[ -f /tmp/arcadia-session.meta ]] && rm /tmp/arcadia-session.meta

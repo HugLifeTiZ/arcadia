@@ -1,0 +1,24 @@
+#!/bin/bash
+
+start_wm () {
+    debug_print "Starting window manager"
+    # User knows best.
+    if [[ -x "$xinit_wm" ]]; then $xinit_wm &
+    # Else detect based on what is available. We don't use the bin function
+    # because it's overkill and also it can't run a program without args;
+    # only determine if it exists when args are not passed.
+    elif shh which fluxbox;  then fluxbox -no-slit -no-toolbar &
+    elif shh which xfwm4;    then xfwm4 --compositor off &
+    elif shh which metacity; then metacity --no-composite &
+    elif shh which openbox;  then openbox &
+    # No window manager.
+    else die "No suitable window manager found. Please install fluxbox."; fi
+}
+
+# Some apps behave really badly without a tray around.
+start_tray () {
+    debug_print "Starting stalonetray"
+    stalonetray --icon-gravity SW --grow-gravity SW -bg "#000000" \
+     --geometry 1x1+0+0 &
+    (sleep 1 && xdotool search --class stalonetray windowunmap) &
+}

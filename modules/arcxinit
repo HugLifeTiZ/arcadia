@@ -1,0 +1,17 @@
+#!/bin/bash
+# Arcadia's xinit starter.
+[[ "$arcadia_loaded" ]] || { echo "Arcadia not loaded."; exit 1; }
+
+eval $(pax11publish -i)
+xinit "$(which bash)" <(cat <<EOF
+DISPLAY=$xinit_display
+start_wm
+start_tray
+pax11publish -e
+fn xinit_before
+disable_blanking
+"$@"
+restore_blanking
+fn xinit_after
+EOF
+) -- $xinit_display vt$xinit_vt

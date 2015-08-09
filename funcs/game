@@ -1,0 +1,67 @@
+#!/bin/bash
+# Functions related to running games.
+
+find_file () {
+    [[ -f "$dir/$file" ]] && return 0
+    file="$(basename "$(readlink -f "$dir/arcadia-game")")"
+    [[ -f "$dir/$file" ]] && return 0
+    for e in "${exts[@]}"; do
+        file="$(find "$dir" -name "*.$e" -printf "%f\n" | head -n1)"
+        [[ -f "$dir/$file" ]] && return 0
+    done
+    [[ ! -f "$dir/$file" ]] && die "Couldn't find game file."
+}
+
+run_game () {
+    cd "$dir"
+    
+    fn game_before
+    
+    config_outputs
+    start_padfiler
+    window_watchers
+    
+    if is $dgpu; then
+        bin primusrun bash -c 'fn! game_exec' || \
+        bin optirun bash -c 'fn! game_exec' || \
+        { export DRI_PRIME=1; fn! game_exec; }
+    else fn! game_exec; fi
+    
+    stop_window_watchers
+    stop_padfiler
+    is $xinit || restore_mode
+    
+    fn game_after
+}
+
+start_padfiler () {
+    if [[ "$padfile" ]] && bin padfiler; then
+        debug_print "Starting padfiler: $padfile $padfile2"
+        padfiler start "$padfile" "$padfile2"
+    else
+        [[ "$lock_js" ]] && padfiler lock-js
+        [[ "$lock_event" ]] && padfiler lock-event
+    fi
+}
+
+stop_padfiler () {
+    if [[ "$padfile" ]] && bin padfiler; then
+        debug_print "Stopping padfiler"
+        padfiler stop
+    elif [[ "$lock_js$lock_event" ]]; then padfiler unlock
+    fi
+}
+
+window_watchers () {
+    if [[ -d "$devilspie2_dir" ]]; then
+        debug_print "Starting devilspie2 in $devilspie2_dir"
+        bin devilspie2 -f "$devilspie2_dir" &
+        devilspie2_pid=$!
+    elif [[ -f "$kpie_file" ]]; then
+        debug_print "Starting kpie with $kpie_file"
+        bin kpie "$kpie_file" &
+        kpie_pid=$!
+    fi
+    return 0
+}
+stop_window_watchers () { kill $devilspie2_pid $kpie_pid; return 0; }

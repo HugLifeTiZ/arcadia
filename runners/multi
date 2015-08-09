@@ -1,0 +1,13 @@
+#!/bin/bash
+# Bases for all multi-platform runners.
+
+runner_mednafen () {
+    local sound_device="default"
+    pgrep pulseaudio && sound_device="pulse"
+    local module="$platform"
+    [[ "$platform" = "gen" ]] && module="md"
+    local med_saves="$saves_dir/$platform/mednafen"; mkdir -p "$med_saves"
+    bin! mednafen -path_sav "$med_saves" -path_state "$med_saves" \
+     -sound.device "$med_sound_device" -force_module "$module" \
+     "$dir/$file"
+}

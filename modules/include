@@ -1,0 +1,3 @@
+#!/bin/bash
+# Returns the path to Arcadia's base include.
+echo "$arcadia_path/funcs/base"

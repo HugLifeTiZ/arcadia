@@ -1,0 +1,45 @@
+#!/bin/bash
+
+# Default precedence rules. Overrideable in config.
+dos_runners="dosbox"
+nes_runners="fceux mednafen"
+snes_runners="snes9x snes9xgtk zsnes mednafen"
+gen_runners="gens-gs fusion mednafen gens"
+sat_runners="yabause"
+n64_runners="mupen64plus mupen64 pj64"
+psx_runners="psx pcsx epsxe mednafen"
+sdc_runners="lxdream"
+ps2_runners="pcsx2"
+gcn_runners="dolphin-emu"
+wii_runners="dolphin-emu"
+gb_runners="vba mednafen"
+gg_runners="mednafen"
+gba_runners="vba mednafen"
+nds_runners="desmume ideas"
+psp_runners="ppsspp jpcsp"
+
+# Set runner based on requested platform.
+set_runner () {
+    [[ "$(type -t game_exec)" = "function" ]] && return 0
+    case $1 in
+    linux)
+        game_exec () { runner_linux ; }
+        [[ -n "$steam_id" ]] && game_exec () { runner_steam ; }
+        ;;
+    win)
+        bin! wine
+        game_exec () { runner_wine ; }
+        [[ -n "$steam_id" ]] && game_exec () { runner_steam_wine ; }
+        ;;
+    *)
+        var="${1}_runners"
+        for prog in ${!var}; do if bin $prog; then
+            eval "game_exec () { runner_$prog ; }"
+            return 0
+        fi; done
+        die "Couldn't find a runner for $1"
+        ;;
+    esac
+    export game_exec
+    return 0
+}

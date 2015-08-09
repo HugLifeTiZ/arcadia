@@ -1,0 +1,52 @@
+#!/bin/bash
+# PC runners, including DOS.
+
+runner_linux () { "./$file"; }
+runner_wine ()  { bin wine "./$file"; }
+
+runner_dosbox () {
+    SDL_VIDEO_X11_DGAMOUSE=0
+    bin dosbox -noautoexec -exit -userconf -conf \
+     <(echo "$dosbox_conf") "$file"
+}
+
+runner_steam () {
+    bin! steam
+    if ! pgrep steam; then
+    (
+        debug_print "Steam not running; starting background process to kill it"
+        steam_pid=""
+        while [[ -z "$steam_pid" ]]; do
+            steam_pid=$(pgrep -n 'SteamChildMonit')
+            sleep 1
+        done
+        debug_print "Child monitor PID is $steam_pid"
+        while [[ -e /proc/$steam_pid ]]; do sleep 1; done
+        bin steam -shutdown
+    ) &
+    fi
+    bin steam -applaunch $steam_id "${steam_args[@]}"
+}
+
+runner_steam_wine () {
+    # So far, this is the only runner that needs a special find routine.
+    if [[ ! -e "$steam_wine_bin" ]]; then
+        steam_wine_bin="$(find "$HOME/.wine/drive_c" -type f \
+         -name "[Ss]team.exe" | head -n1)"
+    fi
+    [[ -e "$steam_wine_bin" ]] || die "Can't find Wine Steam"
+    if ! pgrep '[Ss]team\.exe'; then
+    (
+        debug_print "Steam not running; starting background process to kill it"
+        pid=""
+        while [[ -z "$pid" ]]; do
+            PID=$(pgrep -n "${file/./\\.}")
+            sleep 1
+        done
+        debug_print "Game process PID is $pid"
+        while [[ -e /proc/$pid ]]; do sleep 1; done
+        bin wine "$steam_wine_bin" -shutdown
+    ) &
+    fi
+    bin wine "$steam_wine_bin" -applaunch $steam_id "${steam_args[@]}"
+}

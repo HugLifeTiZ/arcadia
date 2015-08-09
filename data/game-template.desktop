@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=%name%
+Exec="%arcbin%" run "%game%"
+Terminal=False
+Icon=%icon%
+Categories=Game;X-ArcadiaGame;X-Arcadia-%platform%;%arcgenres%
+X-Arcadia-Game=%game%
+X-Arcadia-Boxart=%boxart%
+X-Arcadia-Screenshot=%screenshot%
+X-Arcadia-Platform=%platform%
+X-Arcadia-Genres=%genres%
