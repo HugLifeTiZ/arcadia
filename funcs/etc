@@ -44,10 +44,12 @@ include! () { include "$1" || die "Couldn't source $1"; }
 
 # Find a binary and optionally execute it with args.
 bin () {
-    debug_print "Searching for $1 binary"
     local bin=$1; shift
     local bin_var="${bin}_bin"
-    [[ ! -x "${!bin_var}" ]] && eval "$bin_var=\"$(which $bin)\""
+    [[ ! -x "${!bin_var}" ]] && {
+        debug_print "Searching for program: $1"
+        eval "$bin_var=\"$(which $bin)\""
+    }
     [[ ! -x "${!bin_var}" ]] && return 1
     [[ $# -gt 0 ]] && ${!bin_var} "$@"
     return 0  # We don't want to return the program's error code.
