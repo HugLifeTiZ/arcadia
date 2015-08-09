@@ -10,7 +10,7 @@ config_outputs () {
 }
 
 detect_outputs () {
-    conn_outputs="$(xrandr | sed -nr 's:^(.*) conn.*:\1:p')"
+    conn_outputs=$(xrandr | sed -nr 's:^(.*) conn.*:\1:p')
     [[ "$outputs" ]] || outputs="$conn_outputs"
     for output in $outputs; do
         if echo "$conn_outputs" | shh grep "$output"; then
@@ -18,16 +18,16 @@ detect_outputs () {
         fi
     done
     debug_print "Main output detected as $main_output"
-    custom_mode="$(eval "echo \$mode_${main_output,,}")"
+    custom_mode=$(eval "echo \$mode_${main_output,,}")
     [[ "$custom_mode" ]] && \
      xrandr --output $main_output --primary --mode $custom_mode || \
      xrandr --output $main_output --primary --preferred
 }
 
 detect_mode () {
-    main_mode="$(xrandr | sed -nr "s:$main_output.* ([0-9]+x[0-9]+).*:\1:p")"
-    main_width="$(echo $main_mode | cut -dx -f1)"
-    main_height="$(echo $main_mode | cut -dx -f2)"
+    main_mode=$(xrandr | sed -nr "s:$main_output.* ([0-9]+x[0-9]+).*:\1:p")
+    main_width=$(echo $main_mode | cut -dx -f1)
+    main_height=$(echo $main_mode | cut -dx -f2)
     main_aspect=$((($main_width * 100) / $main_height))
     debug_print "Detected $main_mode with aspect $main_aspect"
 }
@@ -36,9 +36,9 @@ config_mode () {
     if [[ "$scale_height" ]]; then
         if [[ ! "$scale_width" ]]; then
             debug_print "Inferring scale width using aspect ratio"
-            scale_width="$(python -c "
+            scale_width=$(python -c "
 from math import ceil
-print int(ceil($main_width.0 / $main_height * $scale_height))")"
+print int(ceil($main_width.0 / $main_height * $scale_height))")
         fi
         debug_print "Scaling display to ${scale_width}x${scale_height}"
         main_mode="${scale_width}x${scale_height}"

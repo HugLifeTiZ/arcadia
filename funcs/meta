@@ -35,7 +35,7 @@ check_platform! () { check_platform "$1" || die "Couldn't detect platform"; }
 
 load_platform () {
     debug_print "Loading platform meta for $1"
-    plat_base="$(basename "$1")"
+    plat_base=$(basename "$1")
     get_exts $platform
     include "$1/arc-platform.meta"
 }
@@ -66,8 +66,8 @@ get_exts () {
 }
 
 is_game () {
-    local game="$(readlink -f "$1")"
-    local base="$(basename "$game")"
+    local game=$(readlink -f "$1")
+    local base=$(basename "$game")
     [[ "$base" =~ ^\. ]] && return 1
     [[ "$base" = "arc"*"platform.meta" ]] && return 1
     [[ "$base" = @(icons|boxarts|screenshots) ]] && return 1
@@ -77,20 +77,20 @@ is_game () {
 }
 
 load_game () {
-    local game="$(readlink -f "$1")"
+    local game=$(readlink -f "$1")
     is_game "$game" || { debug_print "$game is not a game"; return 1; }
     debug_print "Loading game meta for $1"
     if [[ ! -e "$game" ]]; then die "Target game does not exist"
     elif [[ -d "$game" ]]; then
-        base="$(basename "$game")"
+        base=$(basename "$game")
         name="$base"
         dir="$game"
         include "$game/arcadia-game.meta"
         images_dir="$dir"
     elif [[ -f "$game" ]]; then
-        dir="$(dirname "$game")"
+        dir=$(dirname "$game")
         images_dir="$dir/.images"
-        file="$(basename "$game")"
+        file=$(basename "$game")
         base="${file%.*}"
         name="$base"
         include "$dir/$base.meta"

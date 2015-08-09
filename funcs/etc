@@ -28,7 +28,7 @@ is () {
 
 # Checks to see if a function is set and if so, runs it.
 fn () {
-    if [[ "$(type -t $1)" = "function" ]]; then
+    if [[ $(type -t $1) = "function" ]]; then
         debug_print "Running $1"
         "$@"
     else return 1; fi
@@ -95,7 +95,7 @@ data_dir () {
 
 # Loads up the user configuration and makes assumptions if info is missing.
 load_config () {
-    conf_dir="$(config_dir arcadia)"
+    conf_dir=$(config_dir arcadia)
     if [[ ! -f "$conf_dir/config" ]]; then
         echo "IMPORTANT: No configuration found; assumptions will be made!"
     fi
@@ -115,7 +115,7 @@ load_config () {
 
 # Downloads gamecontrollerdb.txt and adds both it and the user db to the env.
 load_controllers () {
-    local tmp="$(mktemp)"
+    local tmp=$(mktemp)
     shh wget -O "$tmp" "https://raw.githubusercontent.com/gabomdq/" \
      +"SDL_GameControllerDB/master/gamecontrollerdb.txt" && \
      mv "$tmp" "$conf_dir/gamecontrollerdb.txt" || rm "$tmp"
@@ -129,7 +129,7 @@ $(cat "$conf_dir/usercontrollerdb.txt")"
 
 # Check to see if the computer is on AC (0) or battery (1).
 check_power () {
-    local power="$(cat /sys/class/power_supply/AC0/online)"
+    local power=$(cat /sys/class/power_supply/AC0/online)
     if test $power -eq 1 -o -z "$power"
     then debug_print "Computer is on AC"; return 0
     else debug_print "Computer is on battery"; return 1; fi
