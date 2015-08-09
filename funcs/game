@@ -1,6 +1,7 @@
 #!/bin/bash
 # Functions related to running games.
 
+# Look for a file to run, checking symlinks and known file extensions.
 find_file () {
     [[ -f "$dir/$file" ]] && return 0
     file=$(basename $(readlink -f "$dir/arcadia-game"))
@@ -34,6 +35,7 @@ run_game () {
     fn game_after
 }
 
+# Activate padfiler functionality if it's installed.
 start_padfiler () {
     if [[ "$padfile" ]] && bin padfiler; then
         debug_print "Starting padfiler: $padfile $padfile2"

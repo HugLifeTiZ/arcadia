@@ -1,6 +1,8 @@
 #!/bin/bash
 # Functions for loading metadata.
 
+# Automatically detect platform from folder name, otherwise attempt
+# to load the platform meta.
 check_platform () {
     debug_print "Detecting platform for $1"
     local dir=$(basename "$1")
@@ -40,6 +42,8 @@ load_platform () {
     include "$1/arc-platform.meta"
 }
 
+# Get a list of extensions that are associated with the platform to assist
+# with file detection.
 get_exts () {
     case "$1" in
     linux)
@@ -76,6 +80,7 @@ is_game () {
     return 0
 }
 
+# Infer information about the game and load metas if present.
 load_game () {
     local game=$(readlink -f "$1")
     is_game "$game" || { debug_print "$game is not a game"; return 1; }
@@ -100,6 +105,7 @@ load_game () {
     return 0
 }
 
+# Check various icon folders for the specified image type.
 find_image () {
     local type="$1"
     [[ -e "${!type}" ]] && return 0

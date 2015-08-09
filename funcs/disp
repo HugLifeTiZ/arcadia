@@ -1,6 +1,7 @@
 #!/bin/bash
 # Functions related to configuring displays.
 
+# Convenience function to run all the display stuff in the right order.
 config_outputs () {
     detect_outputs
     detect_mode
@@ -9,6 +10,8 @@ config_outputs () {
     (is $xinit || is $move_mouse) && xdotool mousemove 9999 9999
 }
 
+# Finds out which of the preferred outputs is available and activates it.
+# If the user has specified a custom mode for it, use it.
 detect_outputs () {
     conn_outputs=$(xrandr | sed -nr 's:^(.*) conn.*:\1:p')
     [[ "$outputs" ]] || outputs="$conn_outputs"
@@ -24,6 +27,7 @@ detect_outputs () {
      xrandr --output $main_output --primary --preferred
 }
 
+# Detect the mode in use on the main output.
 detect_mode () {
     main_mode=$(xrandr | sed -nr "s:$main_output.* ([0-9]+x[0-9]+).*:\1:p")
     main_width=$(echo $main_mode | cut -dx -f1)
@@ -32,6 +36,8 @@ detect_mode () {
     debug_print "Detected $main_mode with aspect $main_aspect"
 }
 
+# Configures custom mode as specified, including requested scale.
+# Can scale the display sensitive to aspect ratio. Doesn't support 5:4 well.
 config_mode () {
     if [[ "$scale_height" ]]; then
         if [[ ! "$scale_width" ]]; then
@@ -50,6 +56,7 @@ print int(ceil($main_width.0 / $main_height * $scale_height))")
     fi
 }
 
+# If the user has requested clone or single outputs, make it happen.
 arrange_outputs () {
     [[ $(echo $conn_outputs | wc -w) -le 1 ]] && return 0
     local xrandr_args=()
@@ -64,6 +71,8 @@ arrange_outputs () {
     xrandr "${xrandr_args[@]}"
 }
 
+# Sets the desktop back to normal. If the user uses a different mode than
+# the preferred, they can tell Arcadia about it and it will restore it.
 restore_mode () {
     debug_print "Restoring monitor mode configuration."
     if [[ "$restore_mode" ]] || [[ "$restore_scale" ]] \
@@ -79,6 +88,7 @@ restore_mode () {
     else xrandr --output "$main_output" --preferred --scale 1x1; fi
 }
 
+# Does not inhibit screensaver at all.
 disable_blanking () {
     debug_print "Disabling screen blanking"
     xset s noblank

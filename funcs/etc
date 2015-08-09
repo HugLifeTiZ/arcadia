@@ -31,7 +31,7 @@ fn () {
 }
 fn! () { fn "$@" || die "Couldn't run $1"; }
 
-# Sources a file if it exists. Otherwise, doesn't.
+# Sources specified files if they exist. Returns 1 if any are missing.
 include () {
     code=0
     for incl in "$@"; do if [[ -f "$incl" ]]; then
