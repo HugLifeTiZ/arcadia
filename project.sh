@@ -19,7 +19,7 @@ exit_usage () {
 }
 
 [[ $# -lt 1 ]] && exit_usage
-[[ "$(whoami)" = "root" ]] && root=1
+[[ $(whoami) = "root" ]] && root=1
 op="$1"; path="$2"
 
 if [[ ! "$path" ]]; then
@@ -30,7 +30,7 @@ if [[ ! "$path" ]]; then
     fi
 fi
 if [[ "$path" = "${HOME}"* ]]; then bin_dir="$HOME/bin"
-else bin_dir="$(readlink -f "$path/../../bin")"; fi
+else bin_dir=$(readlink -f "$path/../../bin"); fi
 if [[ "$root" ]]; then menu_dir="/etc/xdg/menus/applications-merged"
 else
     [[ -d "$XDG_CONFIG_HOME" ]] && \
@@ -38,7 +38,7 @@ else
      menu_dir="$HOME/.config/menus/applications-merged"
 fi
 
-cd "$(dirname "$(readlink -f "$0")")"
+cd $(dirname $(readlink -f "$0"))
 case "$1" in
 install)
     export SIMPLE_BACKUP_SUFFIX="off"
@@ -66,7 +66,7 @@ install-menu)
     install -m0644 data/arcadia-platforms.menu "$menu_dir"
     ;;
 install-udev)
-    [[ "$(whoami)" = "root" ]] || { echo "Only root can do that."; exit 1; }
+    [[ "$root" ]] || { echo "Only root can do that."; exit 1; }
     install -m0644 data/*.rules /etc/udev/rules.d
     ;;
 uninstall)
@@ -85,7 +85,7 @@ uninstall-menu)
     rm "$menu_dir/arcadia-platforms.menu"
     ;;
 uninstall-udev)
-    [[ "$(whoami)" = "root" ]] || { echo "Only root can do that."; exit 1; }
+    [[ "$root" ]] || { echo "Only root can do that."; exit 1; }
     rm /etc/udev/rules.d/99-arcadia-joystick.rules
     ;;
 esac
