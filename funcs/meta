@@ -10,21 +10,21 @@ check_platform () {
     dos|msdos|dosbox)                         platform="dos"   ;;
     arcade|arc)                               platform="arc"   ;;
     nintendo|famicom|nes|fam)                 platform="nes"   ;;
-    super\ nintendo|super\ famicom|snes|sfc)  platform="snes" ;;
-    genesis|megadrive|gen|md)                 platform="gen" ;;
-    saturn|sat)                               platform="sat" ;;
-    playstation|playstation\ 1|ps1|psx)       platform="psx" ;;
-    nintendo\ 64|n64)                         platform="n64" ;;
-    dreamcast|dc|sdc)                         platform="sdc" ;;
-    playstation\ 2|ps2)                       platform="ps2" ;;
-    xbox)                                     platform="xbox" ;;
-    gamecube|gcn)                             platform="gcn" ;;
-    wii)                                      platform="wii" ;;
-    game\ boy|gameboy|gb)                     platform="gb" ;;
-    game\ geargamegear|gg)                    platform="gg" ;;
-    game\ boy\ advance|gameboy\ advance|gba)  platform="gba" ;;
-    nintendo\ ds|nds)                         platform="nds" ;;
-    playstation\ portable|psp)                platform="psp" ;;
+    super\ nintendo|super\ famicom|snes|sfc)  platform="snes"  ;;
+    genesis|megadrive|gen|md)                 platform="gen"   ;;
+    saturn|sat)                               platform="sat"   ;;
+    playstation|playstation\ 1|ps1|psx)       platform="psx"   ;;
+    nintendo\ 64|n64)                         platform="n64"   ;;
+    dreamcast|dc|sdc)                         platform="sdc"   ;;
+    playstation\ 2|ps2)                       platform="ps2"   ;;
+    xbox)                                     platform="xbox"  ;;
+    gamecube|gcn)                             platform="gcn"   ;;
+    wii)                                      platform="wii"   ;;
+    game\ boy|gameboy|gb)                     platform="gb"    ;;
+    game\ geargamegear|gg)                    platform="gg"    ;;
+    game\ boy\ advance|gameboy\ advance|gba)  platform="gba"   ;;
+    nintendo\ ds|nds)                         platform="nds"   ;;
+    playstation\ portable|psp)                platform="psp"   ;;
     *) include "$1/arcadia-platform.meta" ;; 
     esac
     [[ "$platform" ]] || { debug_print "Platform not recognized"; return 1; }
