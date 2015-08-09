@@ -7,11 +7,7 @@ debug_print () {
     return 0
 }
 
-# Exit with an error message.
-die () {
-    echo "FATAL: $*"
-    exit 1
-}
+die () { echo "FATAL: $*"; exit 1 }
 assert () { test "$@" || die "Assertion $* failed"; }
 
 # Checks to see if a value is any kind of true.
