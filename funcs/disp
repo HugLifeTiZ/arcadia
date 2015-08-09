@@ -32,8 +32,7 @@ detect_mode () {
     main_mode=$(xrandr | sed -nr "s:$main_output.* ([0-9]+x[0-9]+).*:\1:p")
     main_width=$(echo $main_mode | cut -dx -f1)
     main_height=$(echo $main_mode | cut -dx -f2)
-    main_aspect=$((($main_width * 100) / $main_height))
-    debug_print "Detected $main_mode with aspect $main_aspect"
+    debug_print "$main_output is using $main_mode"
 }
 
 # Configures custom mode as specified, including requested scale.
@@ -62,9 +61,9 @@ arrange_outputs () {
     local xrandr_args=()
     for output in $conn_outputs; do
         if [[ "$output" != "$main_output" ]]; then
-            xrandr_args+=(--output $output)
-            is $clone_output && xrandr_args+=(--same-as $main_output \
-             --scale-from "$main_mode")
+            xrandr_args+=(--output "$output")
+            is $clone_output && \
+             xrandr_args+=(--same-as "$main_output" --scale-from "$main_mode")
             is $single_output && xrandr_args+=(--off)
         fi
     done

@@ -39,7 +39,7 @@ load_platform () {
     debug_print "Loading platform meta for $1"
     plat_base=$(basename "$1")
     get_exts $platform
-    include "$1/arc-platform.meta"
+    include "$1/arcadia-platform.meta"
 }
 
 # Get a list of extensions that are associated with the platform to assist
