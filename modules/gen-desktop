@@ -4,9 +4,9 @@
 assert -d "$games_dir"
 
 target_dir="$1"
-[[ -d "$target_dir" ]] || target_dir="$(data_dir applications/arcadia)"
+[[ -d "$target_dir" ]] || target_dir=$(data_dir applications/arcadia)
 rm -r "$target_dir/"*
-dir_dir="$(data_dir desktop-directories)"
+dir_dir=$(data_dir desktop-directories)
 
 for pdir in "$games_dir"/*; do
     if [[ -d "$pdir" ]] && check_platform "$pdir"; then
