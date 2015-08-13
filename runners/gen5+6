@@ -1,2 +1,9 @@
 #!/bin/bash
 
+runner_psx () {
+    psx "$dir/$file"
+}
+
+runner_pcsx () {
+    pcsx -nogui -cdfile "$dir/$file"
+}
