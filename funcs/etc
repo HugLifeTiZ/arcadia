@@ -33,7 +33,7 @@ fn! () { fn "$@" || die "Couldn't run $1"; }
 
 # Sources specified files if they exist. Returns 1 if any are missing.
 include () {
-    code=0
+    local code=0; local incl
     for incl in "$@"; do if [[ -f "$incl" ]]; then
         debug_print "Loading $incl"; . "$incl"
         else debug_print "Could not find $incl"; code=1

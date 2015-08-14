@@ -16,12 +16,13 @@ for arcadia_dir in "$arcadia_path" "$ARCADIA_PATH" "$this_dir" \
  "$HOME/.local/share/arcadia"; do if [[ -f "$arcadia_dir/runners/pc" ]]; then
     arcadia_path="$arcadia_dir"
     break
-fi; done
+fi; done; unset arcadia_dir
 [[ ! -d "$arcadia_path" ]] && { echo "FATAL: Couldn't find Arcadia"; exit 1; }
 
 # Load up all of Arcadia's stuff.
 for funcs in "$arcadia_path/funcs/"*;   do . "$funcs"; done
 for funcs in "$arcadia_path/runners/"*; do . "$funcs"; done
+unset funcs
 xinit_display=":5"
 xinit_vt="09"
 load_config
@@ -37,5 +38,5 @@ for modules_dir in "$arcadia_path" "$XDG_DATA_HOME/arcadia" \
     # This is important so that scripts can detect if Arcadia's x server is
     # running; the most reliable way to do that is pgrep -f arcxinit.
     exec "$(readlink -f "$modules_dir/modules/$module")" "$@"
-fi; done
+fi; done; unset modules_dir
 die "Module $cmd not found."

@@ -12,7 +12,7 @@ gen_directory () {
 
 # Generate a desktop file drom data/game-template.desktop.
 gen_desktop () {
-    local gen_out=""; local gen_cat="";
+    local gen_out=""; local gen_cat=""; local g
     for g in "${genres[@]}"; do gen_out+="$g;"; gen_cat+="X-Arcadia-$g;"; done
     find_image icon || icon="arcadia-$platform"
     find_image boxart
