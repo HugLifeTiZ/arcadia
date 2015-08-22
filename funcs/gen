@@ -17,7 +17,8 @@ gen_desktop () {
     find_image icon || icon="arcadia-$platform"
     find_image boxart
     find_image screenshot
-    sed -e "s|%name%|$name|g" -e "s|%game%|$game|g" -e "s|%icon%|$icon|g" \
+    local sname="${name/&/\\&}"
+    sed -e "s|%name%|$sname|g" -e "s|%game%|$game|g" -e "s|%icon%|$icon|g" \
      -e "s|%boxart%|$boxart|g" -e "s|%screenshot%|$screenshot|g" \
      -e "s|%platform%|$platform|g" -e "s|%genres%|$gen_out|g" \
      -e "s|%arcgenres%|$gen_cat|g" -e "s|%arcbin%|$arcadia_bin|g" \
