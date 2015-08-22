@@ -47,7 +47,7 @@ bin () {
     local bin=$1; shift
     local bin_var="${bin}_bin"
     [[ ! -x "${!bin_var}" ]] && {
-        debug_print "Searching for program: $1"
+        debug_print "Searching for program: $bin"
         eval "$bin_var=\"$(which $bin)\""
     }
     [[ ! -x "${!bin_var}" ]] && return 1
