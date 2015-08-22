@@ -38,7 +38,6 @@ run_game () {
     
     if is $dgpu; then
         debug_print "Using discrete GPU to play $name."
-        bin primusrun bash -c 'fn! game_exec' || \
         bin optirun bash -c 'fn! game_exec' || \
         { export DRI_PRIME=1; fn! game_exec; }
     else debug_print "Starting $name."; fn! game_exec; fi
