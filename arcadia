@@ -4,6 +4,11 @@
 # Include guard.
 if [[ -z "$arcadia_loaded" ]]; then
 
+# Save the current environment.
+echo "set -o allexport" > /tmp/.arcadia_clean_env
+set | egrep -v '^(BASH.*|SHELLOPTS|EUID|PPID|UID)=' >> /tmp/.arcadia_clean_env
+echo "set +o allexport" >> /tmp/.arcadia_clean_env
+
 set -o allexport +o monitor
 [[ "$arcadia_trace$ARCADIA_TRACE" ]] && set -o xtrace
 export SHELLOPTS

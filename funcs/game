@@ -1,6 +1,19 @@
 #!/bin/bash
 # Functions related to running games.
 
+# Set an environment variable and also save it to the clean env.
+set_env () {
+    eval "$1=$2"
+    echo "export $1=$2" >> /tmp/.arcadia_clean_env
+}
+
+# Run a command with the environment from before loading Arcadia.
+clean_env () {
+    env -i "$(which bash)" <(
+echo "source /tmp/.arcadia_clean_env"
+for w in "$@"; do echo -n '"'"$w"'" '; done; echo
+); }
+
 # Look for a file to run, checking symlinks and known file extensions.
 find_file () {
     [[ -f "$dir/$file" ]] && return 0

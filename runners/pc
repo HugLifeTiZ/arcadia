@@ -22,10 +22,10 @@ runner_steam () {
         done
         debug_print "Child monitor PID is $steam_pid"
         while [[ -e /proc/$steam_pid ]]; do sleep 1; done
-        bin steam -shutdown
+        clean_env "$steam_bin" -shutdown
     ) &
     fi
-    bin steam -applaunch $steam_id "${steam_args[@]}"
+    clean_env "$steam_bin" -applaunch $steam_id "${steam_args[@]}"
 }
 
 runner_steam_wine () {
