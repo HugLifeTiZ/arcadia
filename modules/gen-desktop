@@ -25,3 +25,4 @@ for pdir in "$games_dir"/*; do
     fi
 done
 xdg-desktop-menu forceupdate
+notify-send -i applications-games "Arcadia" "Desktop file generation complete."
