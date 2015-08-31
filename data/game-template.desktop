@@ -2,7 +2,7 @@
 Type=Application
 Version=1.0
 Name=%name%
-Exec="%arcbin%" run "%game%"
+Exec="%arcbin%" run_game "%game%"
 Terminal=False
 Icon=%icon%
 Categories=Game;X-ArcadiaGame;X-Arcadia-%platform%;%arcgenres%

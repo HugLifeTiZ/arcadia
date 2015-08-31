@@ -1,1 +1,11 @@
-runner
+#!/bin/bash
+# Runs an arbitrary command with Arcadia's various conveniences.
+[[ "$arcadia_loaded" ]] || { echo "Arcadia not loaded."; exit 1; }
+
+fn runner_before
+disable_blanking
+stop_compositor
+if is $xinit; then "$arcadia_bin" xinit "$@"; else "$@"; fi
+restart_compositor
+restore_blanking
+fn runner_after
