@@ -49,6 +49,33 @@ run_game () {
     fn game_after
 }
 
+# Disable compositor on various WMs if compositing is enabled.
+stop_compositor () {
+    is $disable_compositor || return
+    if pgrep compton; then
+        compositor=compton
+        compton_args="$(cat /proc/$(pgrep -n compton)/cmdline)"
+        pkill compton
+    elif pgrep xfwm4; then
+        if is $(xfconf-query -c xfwm4 -p /general/use_compositing); then
+            compositor=xfwm4
+            xfconf-query -c xfwm4 -p /general/use_compositing -t bool -s false
+        fi
+    # TODO: More WMs
+    fi
+}
+
+# Restart compositor based on what was found in stop_compositor.
+restart_compositor () {
+    is $disable_compositor || return
+    case $compositor in
+        compton) $compton_args & disown ;;
+        xfwm4)
+            xfconf-query -c xfwm4 -p /general/use_compositing -t bool -s true ;;
+        # TODO: More WMs
+    esac
+}
+
 # Activate padfiler functionality if it's installed.
 start_padfiler () {
     if [[ "$padfile" ]] && bin padfiler; then

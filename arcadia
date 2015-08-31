@@ -30,6 +30,7 @@ for funcs in "$arcadia_path/runners/"*; do . "$funcs"; done
 unset funcs
 xinit_display=":5"
 xinit_vt="09"
+disable_compositor=true
 load_config
 load_controllers
 arcadia_loaded=1

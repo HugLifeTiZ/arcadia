@@ -11,7 +11,9 @@ set_runner $platform
 [[ "$steam_id" ]] || find_file
 fn runner_before
 disable_blanking
+stop_compositor
 if is $xinit; then "$arcadia_bin" xinit run_game; else run_game; fi
+restart_compositor
 restore_blanking
 fn runner_after
 [[ -f /tmp/arcadia-session.meta ]] && rm /tmp/arcadia-session.meta
