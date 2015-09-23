@@ -3,16 +3,20 @@
 
 # Set an environment variable and also save it to the clean env.
 set_env () {
-    eval "$1=$2"
-    echo "export $1=$2" >> /tmp/.arcadia_clean_env
+    local var="$1"
+    local val="$2"
+    [[ "$val" ]] || val="${!var}"
+    eval "$var=$val"
+    echo "export $var=$val" >> /tmp/.arcadia_clean_env
 }
 
 # Run a command with the environment from before loading Arcadia.
 clean_env () {
     env -i "$(which bash)" <(
-echo "source /tmp/.arcadia_clean_env"
-for w in "$@"; do echo -n '"'"$w"'" '; done; echo
-); }
+        echo "source /tmp/.arcadia_clean_env"
+        for w in "$@"; do echo -n '"'"$w"'" '; done; echo
+    );
+}
 
 # Look for a file to run, checking symlinks and known file extensions.
 find_file () {
@@ -38,8 +42,8 @@ run_game () {
     
     if is $dgpu; then
         debug_print "Using discrete GPU to play $name."
-        bin optirun bash -c 'fn! game_exec' || \
-        { export DRI_PRIME=1; fn! game_exec; }
+        bin optirun bash -c 'game_exec_wrap' || \
+        { export DRI_PRIME=1; game_exec_wrap; }
     else debug_print "Starting $name."; fn! game_exec; fi
     
     stop_window_watchers
@@ -47,6 +51,19 @@ run_game () {
     is $xinit || restore_mode
     
     fn game_after
+}
+
+# Exports primus env vars if they exist before running game_exec.
+game_exec_wrap () {
+    if is $dgpu; then
+        save_env DRI_PRIME
+        save_env BUMBLEBEE_SOCKET
+        save_env PRIMUS_DISPLAY
+        save_env PRIMUS_libGLa
+        save_env PRIMUS_libGLd
+        save_env LD_LIBRARY_PATH
+    fi
+    fn! game_exec
 }
 
 # Disable compositor on various WMs if compositing is enabled.
