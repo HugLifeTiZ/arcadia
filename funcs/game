@@ -2,12 +2,12 @@
 # Functions related to running games.
 
 # Set an environment variable and also save it to the clean env.
-set_env () {
+save_env () {
     local var="$1"
     local val="$2"
     [[ "$val" ]] || val="${!var}"
-    eval "$var=$val"
-    echo "export $var=$val" >> /tmp/.arcadia_clean_env
+    export $var=$val
+    echo "export $var='$val'" >> /tmp/.arcadia_clean_env
 }
 
 # Run a command with the environment from before loading Arcadia.

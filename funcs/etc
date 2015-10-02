@@ -48,7 +48,7 @@ bin () {
     local bin_var="${bin}_bin"
     [[ ! -x "${!bin_var}" ]] && {
         debug_print "Searching for program: $bin"
-        eval "$bin_var=\"$(which $bin)\""
+        export $bin_var="$(which $bin)"
     }
     [[ ! -x "${!bin_var}" ]] && return 1
     [[ $# -gt 0 ]] && ${!bin_var} "$@"
