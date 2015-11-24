@@ -2,10 +2,7 @@
 # Utility functions.
 
 # Print to stdout if env vars are enabled.
-debug_print () {
-    [[ "$arcadia_debug$ARCADIA_DEBUG" ]] && echo "DEBUG: $*"
-    return 0
-}
+debug_print () { if [[ "$ARCADIA_DEBUG" ]]; then echo "DEBUG: $*"; fi }
 
 die () { echo "FATAL: $*"; exit 1; }
 assert () { test "$@" || die "Assertion $* failed"; }
