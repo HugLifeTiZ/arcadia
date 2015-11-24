@@ -9,19 +9,8 @@ debug_print () {
 
 die () { echo "FATAL: $*"; exit 1; }
 assert () { test "$@" || die "Assertion $* failed"; }
-
 # Checks to see if a value is any kind of true.
-is () {
-    case "${1,,}" in
-        "yes")     ;&
-        "on")      ;&
-        "true")    ;&
-        "enabled") return 0
-    esac
-    [[ $1 -gt 0 ]] && return 0
-    return 1
-}
-
+is () { [[ ${1,,} =~ yes|on|true|enabled || $1 -gt 0 ]]; }
 # Checks to see if a function is set and if so, runs it.
 fn () {
     if [[ "$(type -t $1)" = "function" ]]; then
