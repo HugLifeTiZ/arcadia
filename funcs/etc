@@ -119,17 +119,17 @@ load_controllers () {
      mv "$tmp" "$conf_dir/gamecontrollerdb.txt" || rm "$tmp"
     [[ -f "$conf_dir/gamecontrollerdb.txt" ]] && \
      SDL_GAMECONTROLLERCONFIG="$SDL_GAMECONTROLLERCONFIG
-$(cat "$conf_dir/gamecontrollerdb.txt")"
+$(<"$conf_dir/gamecontrollerdb.txt")"
     [[ -f "$conf_dir/usercontrollerdb.txt" ]] && \
      SDL_GAMECONTROLLERCONFIG="$SDL_GAMECONTROLLERCONFIG
-$(cat "$conf_dir/usercontrollerdb.txt")"
+$(<"$conf_dir/usercontrollerdb.txt")"
     echo "export SDL_GAMECONTROLLERCONFIG=\"$SDL_GAMECONTROLLERCONFIG\"" \
      >> /tmp/.arcadia_clean_env
 }
 
 # Check to see if the computer is on AC (0) or battery (1).
 check_power () {
-    local power="$(cat /sys/class/power_supply/AC0/online)"
+    local power="$(</sys/class/power_supply/AC0/online)"
     if test $power -eq 1 -o -z "$power"
     then debug_print "Computer is on AC"; return 0
     else debug_print "Computer is on battery"; return 1; fi

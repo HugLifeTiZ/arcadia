@@ -71,7 +71,7 @@ stop_compositor () {
     is $disable_compositor || return
     if pgrep compton; then
         compositor=compton
-        compton_args="$(cat /proc/$(pgrep -n compton)/cmdline)"
+        compton_args="$(</proc/$(pgrep -n compton)/cmdline)"
         pkill compton
     elif pgrep xfwm4; then
         if is $(xfconf-query -c xfwm4 -p /general/use_compositing); then
