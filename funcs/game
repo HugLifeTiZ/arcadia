@@ -68,7 +68,7 @@ game_exec_wrap () {
 
 # Disable compositor on various WMs if compositing is enabled.
 stop_compositor () {
-    is $disable_compositor || return
+    is $disable_compositor || return 0
     if pgrep compton; then
         compositor=compton
         compton_args="$(</proc/$(pgrep -n compton)/cmdline)"
@@ -84,7 +84,7 @@ stop_compositor () {
 
 # Restart compositor based on what was found in stop_compositor.
 restart_compositor () {
-    is $disable_compositor || return
+    is $disable_compositor || return 0
     case $compositor in
         compton) $compton_args & disown ;;
         xfwm4)

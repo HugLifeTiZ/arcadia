@@ -113,6 +113,7 @@ load_config () {
 
 # Downloads gamecontrollerdb.txt and adds both it and the user db to the env.
 load_controllers () {
+    is $download_controllerdb || return 0
     local tmp="$(mktemp)"
     shh wget -O "$tmp" "https://raw.githubusercontent.com/gabomdq/" \
      +"SDL_GameControllerDB/master/gamecontrollerdb.txt" && \
