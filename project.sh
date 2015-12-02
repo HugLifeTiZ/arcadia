@@ -30,7 +30,7 @@ if [[ ! "$path" ]]; then
     fi
 fi
 if [[ "$path" = "${HOME}"* ]]; then bin_dir="$HOME/bin"
-else bin_dir="$(readlink -f "$path/../../bin")"; fi
+else bin_dir="$(dirname "$(dirname "$path")")/bin"; fi
 if [[ "$root" ]]; then menu_dir="/etc/xdg/menus/applications-merged"
 else
     [[ -d "$XDG_CONFIG_HOME" ]] && \
