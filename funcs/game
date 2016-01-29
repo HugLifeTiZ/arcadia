@@ -36,7 +36,6 @@ run_game () {
     
     fn game_before
     
-    config_outputs
     start_padfiler
     window_watchers
     
@@ -48,7 +47,6 @@ run_game () {
     
     stop_window_watchers
     stop_padfiler
-    is $xinit || restore_mode
     
     fn game_after
 }

@@ -6,6 +6,7 @@ eval "$(pax11publish -i)"
 xinit "$(which bash)" <(cat <<EOF
 DISPLAY=$xinit_display
 echo "DISPLAY=$xinit_display" >> /tmp/.arcadia_clean_env
+config_outputs
 start_wm
 start_tray
 pax11publish -e
