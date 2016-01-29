@@ -10,12 +10,12 @@ config_outputs
 start_wm
 start_tray
 pax11publish -e
-fn xinit_before
+fn xinit_start
 disable_blanking
 EOF
 for w in "$@"; do echo -n '"'"$w"'" '; done; echo
 cat <<EOF
 restore_blanking
-fn xinit_after
+fn xinit_end
 EOF
 ) -- $xinit_display vt$xinit_vt

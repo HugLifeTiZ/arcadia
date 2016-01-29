@@ -2,7 +2,7 @@
 # Runs an arbitrary command with Arcadia's various conveniences.
 [[ "$arcadia_loaded" ]] || { echo "Arcadia not loaded."; exit 1; }
 
-fn runner_before
+fn runner_start
 disable_blanking
 stop_compositor
 if is $xinit; then
@@ -12,4 +12,4 @@ if is $xinit; then
 else "$@"; fi
 restart_compositor
 restore_blanking
-fn runner_after
+fn runner_end
