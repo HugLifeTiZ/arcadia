@@ -5,7 +5,11 @@
 fn runner_before
 disable_blanking
 stop_compositor
-if is $xinit; then "$arcadia_bin" xinit "$@"; else "$@"; fi
+if is $xinit; then
+    fn runner_before_xinit
+    "$arcadia_bin" xinit "$@";
+    fn runner_after_xinit
+else "$@"; fi
 restart_compositor
 restore_blanking
 fn runner_after
