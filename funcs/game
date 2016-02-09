@@ -41,9 +41,11 @@ run_game () {
     
     if is $dgpu; then
         debug_print "Using discrete GPU to play $name."
-        bin optirun bash -c 'game_exec_wrap' || \
-        { export DRI_PRIME=1; game_exec_wrap; }
-    else debug_print "Starting $name."; fn! game_exec; fi
+        # Terrible crappy hack. :|
+        args=""; for a in "$@"; do args+="\"$a\""; done
+        bin optirun bash -c "game_exec_wrap $args" || \
+        { export DRI_PRIME=1; game_exec_wrap "$@"; }
+    else debug_print "Starting $name."; fn! game_exec "$@"; fi
     
     stop_window_watchers
     stop_padfiler
@@ -61,7 +63,7 @@ game_exec_wrap () {
         save_env PRIMUS_libGLd
         save_env LD_LIBRARY_PATH
     fi
-    fn! game_exec
+    fn! game_exec "$@"
 }
 
 # Disable compositor on various WMs if compositing is enabled.

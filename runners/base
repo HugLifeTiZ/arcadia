@@ -23,12 +23,12 @@ set_runner () {
     [[ "$(type -t game_exec)" = "function" ]] && return 0
     case $1 in
     linux)
-        game_exec () { runner_linux ; }
+        game_exec () { runner_linux "$@" ; }
         [[ -n "$steam_id" ]] && game_exec () { runner_steam ; }
         ;;
     win)
         bin! wine
-        game_exec () { runner_wine ; }
+        game_exec () { runner_wine "$@" ; }
         [[ -n "$steam_id" ]] && game_exec () { runner_steam_wine ; }
         ;;
     *)

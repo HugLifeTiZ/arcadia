@@ -1,8 +1,8 @@
 #!/bin/bash
 # PC runners, including DOS.
 
-runner_linux () { "./$file"; }
-runner_wine ()  { bin wine "./$file"; }
+runner_linux () { "./$file" "$@"; }
+runner_wine ()  { bin wine "./$file" "$@"; }
 
 runner_dosbox () {
     SDL_VIDEO_X11_DGAMOUSE=0
