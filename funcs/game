@@ -37,7 +37,7 @@ run_game () {
     fn game_before
     
     start_padfiler
-    window_watchers
+    start_window_watchers
     
     if is $dgpu; then
         debug_print "Using discrete GPU to play $name."
@@ -112,7 +112,7 @@ stop_padfiler () {
     fi
 }
 
-window_watchers () {
+start_window_watchers () {
     if [[ -d "$devilspie2_dir" ]]; then
         debug_print "Starting devilspie2 in $devilspie2_dir"
         bin devilspie2 -f "$devilspie2_dir" &
