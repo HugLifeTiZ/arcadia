@@ -1,6 +1,16 @@
 #!/bin/bash
 # Functions for loading metadata.
 
+# Finds a game if given only a name.
+find_game () {
+    game="$(readlink -f "$1")"
+    [[ -e "$game" ]] && return
+    [[ -d "$game_dir" ]] || die "Set game_dir in config to use short names."
+    game=$(find "$game_dir" -type d -name "$1" | head -1)
+    [[ -e "$game" ]] || game=$(find "$game_dir" -type f -name "$1.meta")
+    [[ -e "$game" ]] || die "Unable to find game."
+}
+
 # Automatically detect platform from folder name, otherwise attempt
 # to load the platform meta.
 check_platform () {

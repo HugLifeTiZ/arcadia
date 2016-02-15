@@ -2,7 +2,7 @@
 # Receives the full path to a game to run, and runs it, optionally with args.
 [[ "$arcadia_loaded" ]] || { echo "Arcadia not loaded."; exit 1; }
 
-game="$(readlink -f "$1")"; shift
+find_game "$1"; shift
 check_platform! "$(dirname "$game")"
 load_platform "$(dirname "$game")"
 load_game "$game" || die "Failed to load $game."
