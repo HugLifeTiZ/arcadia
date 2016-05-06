@@ -3,7 +3,7 @@
 start_wm () {
     debug_print "Starting window manager"
     # User knows best.
-    if [[ "${xinit_wm[@]}" ]]; then "${xinit_wm[@]}" &
+    if [[ "$xinit_wm" ]]; then $xinit_wm &
     # Else detect based on what is available. We don't use the bin function
     # because it's overkill and also it can't run a program without args;
     # only determine if it exists when args are not passed.
