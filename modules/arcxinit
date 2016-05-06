@@ -18,4 +18,4 @@ cat <<EOF
 restore_blanking
 fn xinit_end
 EOF
-) -- $xinit_display vt$xinit_vt
+) -- $xinit_display vt$xinit_vt -nolisten tcp -br
