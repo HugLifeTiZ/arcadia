@@ -1,9 +1,21 @@
 #!/bin/bash
 
 runner_psx () {
-    psx "$dir/$file"
+    bin psx "$dir/$file"
 }
 
 runner_pcsx () {
-    pcsx -nogui -cdfile "$dir/$file"
+    bin pcsx -nogui -cdfile "$dir/$file"
+}
+
+runner_pcsxr () {
+    bin pcsxr -nogui -cdfile "$dir/$file"
+}
+
+runner_epsxe () {
+    bin epsxe -nogui -loadiso "$dir/$file"
+}
+
+runner_mupen64plus () {
+    bin mupen64plus "$dir/$file"
 }
