@@ -31,6 +31,12 @@ find_file () {
     [[ ! -f "$dir/$file" ]] && die "Couldn't find game file."
 }
 
+# Implementation of file selection. run_game rebinds select_game to this.
+_select_file () {
+    file=$(yad --center --splash --list --no-headers --separator "" \
+     --print-column 1 --hide-column 1 --column "File" --column "Name" "$@")
+}
+
 run_game () {
     cd "$dir"
     

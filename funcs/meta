@@ -1,6 +1,9 @@
 #!/bin/bash
 # Functions for loading metadata.
 
+# This function gets redefined when it's time to actually load the game.
+select_file () { true; }
+
 # Finds a game if given only a name.
 find_game () {
     game="$(readlink -f "$1")"
