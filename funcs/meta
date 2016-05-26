@@ -70,16 +70,20 @@ get_exts () {
         ;;
     win)  ;&
     dos)  exts="bat exe BAT EXE" ;;
-    nes)  exts="nes" ;;
-    gen)  exts="smd bin" ;;
-    snes) exts="smc sfc" ;;
-    n64)  exts="n64 z64" ;;
+    nes)  exts="nes zip" ;;
+    gen)  exts="smd gen bin zip" ;;
+    snes) exts="smc sfc zip" ;;
+    n64)  exts="n64 z64 zip" ;;
     sat|sdc|psx|ps2|xbox|gcn|wii|psp)
-          exts="cue iso bin" ;;
-    gb)   exts="gb" ;;
-    gg)   exts="gg" ;;
-    gba)  exts="gba" ;;
-    nds)  exts="nds" ;;
+          exts="cue iso ccd bin"
+          case "$1" in  # Compressed formats.
+          ps2)     exts+=" gz cso" ;;
+          gcn|wii) exts+=" gcz" ;;
+          esac ;;
+    gb)   exts="gb zip" ;;
+    gg)   exts="gg zip" ;;
+    gba)  exts="gba zip" ;;
+    nds)  exts="nds zip" ;;
     esac
 }
 
