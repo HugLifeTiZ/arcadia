@@ -15,10 +15,29 @@ start_wm () {
     else die "No suitable window manager found. Please install fluxbox."; fi
 }
 
+# Set a nice background. Useful to make sure the server is actually running,
+# and when combined with an aspect-correct fullscreen window, makes pillarboxes
+# look a lot nicer.
+set_background () {
+    bin feh || return 0
+    if is $xinit_bg_xfconf && bin xfconf-query; then
+        feh --bg-fill "$(xfconf-query -c xfce4-desktop -p \
+         /backdrop/screen0/monitor0/workspace0/last-image)"
+    elif [[ -e "$conf_dir/xinit_bg" ]]; then
+        feh --bg-fill "$conf_dir/xinit_bg"
+    elif [[ -e "$conf_dir/xinit_bg.png" ]]; then
+        feh --bg-fill "$conf_dir/xinit_bg.png"
+    elif [[ -e "$conf_dir/xinit_bg.jpg" ]]; then
+        feh --bg-fill "$conf_dir/xinit_bg.jpg"
+    fi
+}
+
 # Some apps behave really badly without a tray around.
+# By default the tray will stick around but you can hide it through config.
 start_tray () {
     debug_print "Starting stalonetray"
-    stalonetray --icon-gravity SW --grow-gravity SW -bg "#000000" \
-     --geometry 1x1+0+0 &
-    (sleep 1 && xdotool search --class stalonetray windowunmap) &
+    shh stalonetray -t --window-layer bottom &
+    if is $hide_tray; then
+        (sleep 1 && xdotool search --class stalonetray windowunmap) &
+    fi
 }

@@ -8,6 +8,7 @@ DISPLAY=$xinit_display
 echo "DISPLAY=$xinit_display" >> /tmp/.arcadia_clean_env
 config_outputs
 start_wm
+set_background
 start_tray
 pax11publish -e
 fn xinit_start
