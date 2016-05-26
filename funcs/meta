@@ -127,12 +127,11 @@ find_image () {
         for n in "$type.$e" ".$type.$e" \
          "arcadia-$type.$e" ".arcadia-$type.$e"; do
             debug_print "Looking for $type: $n in $dir"
-            [[ -e "$dir/$n" ]] && { eval "$type=\"$dir/$n\""; return 0; }
+            [[ -e "$dir/$n" ]] && { export $type="$dir/$n"; return 0; }
         done
         for d in "$dir/${type}s" "$dir/.${type}s"; do
             debug_print "Looking for $type: $base.$e in $d"
-            [[ -e "$d/$base.$e" ]] && { eval "$type=\"$d/$base.$e\""
-                return 0; }
+            [[ -e "$d/$base.$e" ]] && { export $type="$d/$base.$e"; return 0; }
         done
     done
     return 1
