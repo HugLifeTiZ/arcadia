@@ -45,12 +45,13 @@ run_game () {
     start_padfiler
     start_window_watchers
     
+    check_dgpu
     if is $dgpu; then
         debug_print "Using discrete GPU to play $name."
         # Terrible crappy hack. :|
         args=""; for a in "$@"; do args+="\"$a\""; done
         bin optirun bash -c "game_exec_wrap $args" || \
-        { export DRI_PRIME=1; game_exec_wrap "$@"; }
+        { save_env DRI_PRIME 1; game_exec_wrap "$@"; }
     else debug_print "Starting $name."; fn! game_exec "$@"; fi
     
     stop_window_watchers
@@ -59,10 +60,16 @@ run_game () {
     fn game_after
 }
 
+# Overrides dgpu variable to off if on battery.
+check_dgpu () {
+    [[ "${dgpu,,}" == "force" || $dgpu -eq 2 ]] && { dgpu=yes; return 0; }
+    check_power || dgpu=no
+}
+
 # Exports primus env vars if they exist before running game_exec.
 game_exec_wrap () {
     if is $dgpu; then
-        save_env DRI_PRIME
+        debug_print "Saving Bumblebee/Primus vars."
         save_env BUMBLEBEE_SOCKET
         save_env PRIMUS_DISPLAY
         save_env PRIMUS_libGLa
