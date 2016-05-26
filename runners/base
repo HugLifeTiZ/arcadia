@@ -2,21 +2,21 @@
 
 # Default precedence rules. Overrideable in config.
 dos_runners="dosbox"
-nes_runners="fceux mednafen"
-snes_runners="snes9x snes9xgtk zsnes mednafen"
-gen_runners="gens-gs fusion mednafen gens"
-sat_runners="yabause"
-n64_runners="mupen64plus mupen64 pj64"
-psx_runners="pcsxr pcsx epsxe mednafen psx"
-sdc_runners="lxdream"
+nes_runners="fceux retroarch mednafen"
+snes_runners="snes9x snes9xgtk zsnes retroarch mednafen"
+gen_runners="gens-gs fusion retroarch mednafen gens"
+sat_runners="yabause retroarch"
+n64_runners="mupen64plus mupen64 pj64 retroarch"
+psx_runners="pcsx epsxe retroarch mednafen psx"
+sdc_runners="reicast lxdream"
 ps2_runners="pcsx2"
 gcn_runners="dolphin-emu"
 wii_runners="dolphin-emu"
-gb_runners="vba mednafen"
+gb_runners="vba retroarch mednafen"
 gg_runners="mednafen"
-gba_runners="vba mednafen"
-nds_runners="desmume ideas"
-psp_runners="ppsspp jpcsp"
+gba_runners="vba retroarch mednafen"
+nds_runners="desmume ideas retroarch"
+psp_runners="ppsspp jpcsp retroarch"
 
 # Set runner based on requested platform.
 set_runner () {
@@ -34,7 +34,9 @@ set_runner () {
     *)
         var="${1}_runners"
         for prog in ${!var}; do if bin $prog; then
-            eval "game_exec () { runner_$prog ; }"
+            # For retroarch, we also have to make sure we have a core.
+            [[ "$prog" == "retroarch" ]] && { libretro_find_core || continue; }
+            eval "game_exec () { runner_${prog//-/_} ; }"
             return 0
         fi; done
         die "Couldn't find a runner for $1"
