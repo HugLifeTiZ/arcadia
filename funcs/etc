@@ -31,11 +31,15 @@ include! () { include "$1" || die "Couldn't source $1"; }
 # Find a binary and optionally execute it with args.
 bin () {
     local bin=$1; shift
-    local bin_var="${bin}_bin"
-    [[ ! -x "${!bin_var}" ]] && {
+    local bin_var="${bin//-/_}_bin"
+    local aliases_var="${bin//-/_}_aliases"
+    if [[ ! -x "${!bin_var}" ]]; then
         debug_print "Searching for program: $bin"
-        export $bin_var="$(which $bin)"
-    }
+        for alias in $bin ${!aliases_var}; do
+            export $bin_var="$(which $alias)"
+            [[ -x "$bin_var" ]] && break
+        done
+    fi
     [[ ! -x "${!bin_var}" ]] && return 1
     [[ $# -gt 0 ]] && ${!bin_var} "$@"
     return 0  # We don't want to return the program's error code.
