@@ -4,12 +4,9 @@ runner_psx () {
     bin psx "$dir/$file"
 }
 
+pcsx_aliases="pcsxr"
 runner_pcsx () {
     bin pcsx -nogui -cdfile "$dir/$file"
-}
-
-runner_pcsxr () {
-    bin pcsxr -nogui -cdfile "$dir/$file"
 }
 
 runner_epsxe () {
