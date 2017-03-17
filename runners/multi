@@ -14,7 +14,7 @@ runner_mednafen () {
 
 
 # RetroArch is a runner that has its own subset of runners. Bluh.
-libretro_cores_arc="mame fba"  # It's probably better to set this per-game.
+libretro_cores_arc="mame fbalpha fba"  # It's probably better to set this per-game.
 libretro_cores_nes="fceumm nestopia quicknes"
 libretro_cores_gen="picodrive genesis_plus_gx"
 libretro_cores_snes="bsnes_mercury_accuracy bsnes_mercury_balanced"
@@ -22,7 +22,7 @@ libretro_cores_snes+="bsnes_mercury_performance bsnes_accuracy bsnes_balanced"
 libretro_cores_snes+="bsnes_performance snes9x snes9x_next"
 libretro_cores_sat="yabause"
 libretro_cores_psx="mednafen_psx beetle_psx"
-libretro_cores_n64="mupen64plus"
+libretro_cores_n64="glupen64 mupen64plus"
 libretro_cores_sdc="reicast"
 libretro_cores_gb="mednafen_vb beetle_vb gambatte"
 libretro_cores_gg="genesis_plus_gx"
@@ -38,7 +38,8 @@ runner_retroarch () {
         echo 'config_save_on_exit = "false"' > /tmp/.ra-append.cfg
         args+=(--appendconfig "${configs//;/|}/tmp/.ra-append.cfg")
     fi
-    echo "${args[@]}"
+    echo bin retroarch "${args[@]}" -L "$libretro_core" \
+     -s "$saves_dir/$platform" -S "$saves_dir/$platform" "$dir/$file"
     bin retroarch "${args[@]}" -L "$libretro_core" \
      -s "$saves_dir/$platform" -S "$saves_dir/$platform" "$dir/$file"
     rm /tmp/.ra-append.cfg

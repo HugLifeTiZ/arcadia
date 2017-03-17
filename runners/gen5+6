@@ -39,7 +39,7 @@ runner_pcsx2 () {
     is $software && renderer=13 || renderer=12
     
     # Substitutions.
-    local inidir="$HOME/.config/PCSX2/inis_1.4.0"
+    local inidir="${pcsx2_inidir:-$HOME/.config/PCSX2/inis_1.4.0}"
     sed -r -i -e 's/(Renderer\s*=\s*).+/\1'$renderer'/i' \
      -e 's/(fxaa\s*=\s*).+/\1'$fxaa'/i' \
      -e 's/(upscale_multiplier\s*=\s*).+/\1'$int_res'/i' \
@@ -63,7 +63,7 @@ runner_pcsx2 () {
     
     # Start the game.
     [[ "$gamefixes" ]] && gamefixes="--gamefixes=$gamefixes"
-    bin pcsx2 -nogui $gamefixes "$dir/$file" || true
+    bin pcsx2 --nogui $gamefixes "$dir/$file" || true
     [[ -e "$dir/GSdx.ini" ]] && mv "$inidir/GSdx.ini.bak" "$inidir/GSdx.ini"
 }
 

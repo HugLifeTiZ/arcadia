@@ -2,6 +2,7 @@
 
 # Default precedence rules. Overrideable in config.
 dos_runners="dosbox"
+arc_runners="retroarch"
 nes_runners="fceux retroarch mednafen"
 snes_runners="snes9x snes9xgtk zsnes retroarch mednafen"
 gen_runners="gens-gs fusion retroarch mednafen gens"

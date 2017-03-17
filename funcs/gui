@@ -1,0 +1,29 @@
+#!/bin/bash
+# Functions that wrap GUI tools like yad and zenity.
+
+select_one () {
+    if bin yad; then yad_select_one "$@"
+    elif bin zenity; then zenity_select_one "$@"
+    else die "Please install yad or zenity to enable GUI selections."; fi
+}
+
+yad_select_one () {
+    local label="$1"; shift
+    local size=${font_size:-11}
+    yad --undecorated --center \
+     --width $((size * 16)) --height $(($# * size + size * 2 + 48)) \
+     --text-align center --text "<big><b>$label</b></big>" \
+     --list --no-headers --column id --column name \
+     --print-column 1 --hide-column 1 --limit 1 \
+      "$@" | tr -d '|'
+}
+
+zenity_select_one () {
+    local label="$1"; shift
+    local size=${font_size:-11}
+    zenity --title "$label" --text "<big><b>$label</b></big>" \
+     --width $((size * 16)) --height $(($# * size + size * 2 + 64)) \
+     --list --hide-header --column id --column name \
+     --print-column 1 --hide-column 1 \
+     "$@" | tr -d '|'
+}

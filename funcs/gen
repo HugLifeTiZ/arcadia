@@ -22,10 +22,11 @@ gen_desktop () {
      -e "s|%screenshot%|${screenshot/&/\\&}|g" \
      -e "s|%platform%|$platform|g" -e "s|%genres%|$gen_out|g" \
      -e "s|%arcgenres%|$gen_cat|g" -e "s|%arcbin%|$arcadia_bin|g" \
+     -e "s|%hidden%|${hidden:-false}|g" \
      "$arcadia_path/data/game-template.desktop" > "$1"
 }
 
 # Cleans up game variables between each generation to prevent mixing up info.
 clear_game () {
-    unset name genres dgpu padfile icon boxart screenshot
+    unset name genres dgpu padfile icon boxart screenshot hidden
 }

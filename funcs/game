@@ -25,7 +25,7 @@ find_file () {
     [[ -f "$dir/$file" ]] && return 0
     local e
     for e in $exts; do
-        file="$(find "$dir" -name "*.$e" -printf "%f\n" | head -n1)"
+        file="$(find "$dir" -maxdepth 1 -name "*.$e" -printf "%f\n" | head -n1)"
         [[ -f "$dir/$file" ]] && return 0
     done
     [[ ! -f "$dir/$file" ]] && die "Couldn't find game file."
@@ -35,6 +35,7 @@ find_file () {
 _select_file () {
     file=$(yad --center --undecorated --list --no-headers --separator "" \
      --print-column 1 --hide-column 1 --column "File" --column "Name" "$@")
+    [[ $? -eq 0 ]] || die "Canceled."
 }
 
 run_game () {
@@ -46,11 +47,12 @@ run_game () {
     start_window_watchers
     
     check_dgpu
-    if is $dgpu; then
+    if is $dgpu && ! is $primex; then
         debug_print "Using discrete GPU to play $name."
         # Terrible crappy hack. :|
         args=""; for a in "$@"; do args+="\"$a\""; done
-        bin optirun bash -c "game_exec_wrap $args" || \
+        bin optirun -b ${optirun_backend:-primus} \
+          bash -c "game_exec_wrap $args" || \
         { save_env DRI_PRIME 1; game_exec_wrap "$@"; }
     else debug_print "Starting $name."; fn! game_exec "$@"; fi
     

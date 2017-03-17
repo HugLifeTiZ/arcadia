@@ -41,3 +41,11 @@ start_tray () {
         (sleep 1 && xdotool search --class stalonetray windowunmap) &
     fi
 }
+
+# Allows use of the intel outputs when running on the dgpu.
+prime_xrandr () {
+    is $dgpu && is $primex || return
+    #prime-offload
+    xrandr --setprovideroutputsource modesetting NVIDIA-0
+    xrandr --auto
+}

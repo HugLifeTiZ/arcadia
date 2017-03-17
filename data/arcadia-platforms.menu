@@ -8,6 +8,34 @@
             <Category>X-ArcadiaGame</Category>
         </Exclude>
         <Menu>
+            <Name>arcadia-local-2p-vs</Name>
+            <Directory>arcadia-local-2p-vs.directory</Directory>
+            <Include>
+                <Category>X-Arcadia-local-2p-vs</Category>
+            </Include>
+        </Menu>
+        <Menu>
+            <Name>arcadia-local-2p-coop</Name>
+            <Directory>arcadia-local-2p-coop.directory</Directory>
+            <Include>
+                <Category>X-Arcadia-local-2p-coop</Category>
+            </Include>
+        </Menu>
+        <Menu>
+            <Name>arcadia-local-mp-vs</Name>
+            <Directory>arcadia-local-2p-vs.directory</Directory>
+            <Include>
+                <Category>X-Arcadia-local-2p-vs</Category>
+            </Include>
+        </Menu>
+        <Menu>
+            <Name>arcadia-local-mp-coop</Name>
+            <Directory>arcadia-local-2p-coop.directory</Directory>
+            <Include>
+                <Category>X-Arcadia-local-2p-coop</Category>
+            </Include>
+        </Menu>
+        <Menu>
             <Name>arcadia-linux</Name>
             <Directory>arcadia-linux.directory</Directory>
             <Include>
@@ -148,9 +176,15 @@
             </Include>
         </Menu>
         <Layout>
+            <Menuname>arcadia-local-2p-vs</Menuname>
+            <Menuname>arcadia-local-2p-coop</Menuname>
+            <Menuname>arcadia-local-mp-vs</Menuname>
+            <Menuname>arcadia-local-mp-coop</Menuname>
+            <Separator/>
             <Menuname>arcadia-linux</Menuname>
             <Menuname>arcadia-win</Menuname>
             <Menuname>arcadia-dos</Menuname>
+            <Separator/>
             <Menuname>arcadia-arc</Menuname>
             <Menuname>arcadia-nes</Menuname>
             <Menuname>arcadia-snes</Menuname>
@@ -163,6 +197,7 @@
             <Menuname>arcadia-xbox</Menuname>
             <Menuname>arcadia-gcn</Menuname>
             <Menuname>arcadia-wii</Menuname>
+            <Separator/>
             <Menuname>arcadia-gg</Menuname>
             <Menuname>arcadia-gb</Menuname>
             <Menuname>arcadia-gba</Menuname>

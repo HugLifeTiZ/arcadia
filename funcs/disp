@@ -22,7 +22,10 @@ detect_outputs () {
         fi
     done
     debug_print "Main output detected as $main_output"
-    custom_mode="$(eval "echo \$mode_${main_output,,}")"
+    
+    main_varname=${main_output,,} main_varname=${main_varname/-/_}
+    custom_mode="$(eval "echo \$mode_${main_varname,,}")"
+    echo $custom_mode
     [[ "$custom_mode" ]] && \
      xrandr --output $main_output --primary --mode $custom_mode || \
      xrandr --output $main_output --primary --preferred

@@ -63,13 +63,14 @@ get_exts () {
     linux)
         exts="sh"
         case "$(uname -m)" in
-        x86_64) exts+="x86_64 x64" ;&
-        i?86)   exts+="x86" ;;
+        x86_64) exts+=" x86_64 x64" ;&
+        i?86)   exts+=" x86" ;;
         esac
-        exts+="bin run"
+        exts+=" bin run"
         ;;
     win)  ;&
     dos)  exts="bat exe BAT EXE" ;;
+    arc)  exts="zip" ;;
     nes)  exts="nes zip" ;;
     gen)  exts="smd gen bin zip" ;;
     snes) exts="smc sfc zip" ;;
