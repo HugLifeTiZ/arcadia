@@ -2,22 +2,21 @@
 # Utility functions.
 
 # Print to stdout if env vars are enabled.
-debug_print () { if [[ "$ARCADIA_DEBUG" ]]; then echo "DEBUG: $*"; fi }
+debug_print () { if [[ "${ARCADIA_DEBUG:-}" ]]; then echo "DEBUG: $*"; fi }
 
 die () { echo "FATAL: $*"; exit 1; }
 assert () { test "$@" || die "Assertion $* failed"; }
 # Checks to see if a value is any kind of true.
-is () { [[ ${1,,} =~ yes|on|true|enabled || $1 -gt 0 ]]; }
+is () { local a="${1:-}"; [[ "${a,,}" =~ yes|on|true|^[0-9]*[1-9][0-9]*$ ]]; }
 # Shushes a command. All output directed to /dev/null.
 shh () { "$@" >/dev/null 2>&1; }
 # Checks to see if a function is set and if so, runs it.
 fn () {
-    if [[ "$(type -t $1)" = "function" ]]; then
-        debug_print "Running $1"
+    if [[ "$(type -t "${1:-}")" = "function" ]]; then
+        debug_print "Running ${1:-}"
         "$@"
     else return 1; fi
 }
-fn! () { fn "$@" || die "Couldn't run $1"; }
 
 # Sources specified files if they exist. Returns 1 if any are missing.
 include () {
@@ -28,72 +27,67 @@ include () {
     fi; done
     return $code
 }
-include! () { include "$1" || die "Couldn't source $1"; }
 
 # Find a binary and optionally execute it with args.
+declare -A bins; declare -A aliases
 bin () {
-    local bin=$1; shift
-    local bin_var="${bin//-/_}_bin"
-    local aliases_var="${bin//-/_}_aliases"
-    if [[ ! -x "${!bin_var}" ]]; then
+    local bin=${1:?}; shift
+    if [[ ! -x "${bins[$bin]}" ]]; then
         debug_print "Searching for program: $bin"
-        for alias in $bin ${!aliases_var}; do
-            export $bin_var="$(which $alias)"
-            [[ -x "$bin_var" ]] && break
+        for alias in $bin ${aliases[$bin]}; do
+            bins[$bin]="$(which "$alias")"
+            [[ -x "${bins[$bin]}" ]] && break
         done
     fi
-    [[ ! -x "${!bin_var}" ]] && return 1
-    [[ $# -gt 0 ]] && ${!bin_var} "$@"
+    [[ ! -x "${bins[$bin]}" ]] && return 1
+    [[ $# -gt 0 ]] && "${bins[$bin]}" "$@"
     return 0  # We don't want to return the program's error code.
 }
-bin! () { bin "$@" || die "Couldn't find $1"; }
 
 # Returns true if a value is in the given list.
 val_in_list () {
     local e
-    for e in "${@:2}"; do [[ "$e" == "$1" ]] && return 0; done
+    for e in "${@:2}"; do [[ "$e" == "${1:-}" ]] && return 0; done
     return 1
 }
 
 # Converts a title to a filename-friendly name.
 sanitize_title () {
-    echo $* | cut -d: -f1 | awk -F' - ' '{print $1}' | \
-     tr [:upper:] [:lower:] | tr -s [:blank:] - | tr -d "'" | \
+    echo "$@" | cut -d: -f1 | awk -F' - ' '{print $1}' | \
+     tr '[:upper:]' '[:lower:]' | tr -s '[:blank:]' - | tr -d "'" | \
      sed s:+:-plus:g
 }
 
 # Requests a config directory. If it doesn't exist, make it.
 config_dir () {
-    [[ ! -d "$XDG_CONFIG_HOME" ]] && XDG_CONFIG_HOME="$HOME/.config"
-    [[ ! -d "$XDG_CONFIG_HOME/$1" ]] && {
-        mkdir -p "$XDG_CONFIG_HOME/$1" || die "Couldn't make $1 config dir."
-    }
-    echo "$XDG_CONFIG_HOME/$1"
+    local targ_dir="${XDG_CONFIG_HOME:-$HOME/.config}/${1:-arcadia}"
+    [[ -d "$targ_dir" ]] || mkdir -p "$targ_dir" || \
+     die "Couldn't make ${1:-arcadia} config dir."
+    echo "$targ_dir"
 }
 
 # Requests a data directory. If it doesn't exist, make it.
 data_dir () {
-    [[ ! -d "$XDG_DATA_HOME" ]] && XDG_DATA_HOME="$HOME/.local/share"
-    [[ ! -d "$XDG_DATA_HOME/$1" ]] && {
-        mkdir -p "$XDG_DATA_HOME/$1" || die "Couldn't make $1 data dir."
-    }
-    echo "$XDG_DATA_HOME/$1"
+    local targ_dir="${XDG_DATA_HOME:-$HOME/.local/share}/${1:-arcadia}"
+    [[ -d "$targ_dir" ]] || mkdir -p "$targ_dir" || \
+     die "Couldn't make ${1:-arcadia} data dir."
+    echo "$targ_dir"
 }
 
 # Loads up the user configuration and makes assumptions if info is missing.
 load_config () {
-    conf_dir="$(config_dir arcadia)"
+    conf_dir=$(config_dir arcadia)
     if [[ ! -f "$conf_dir/config" ]]; then
         echo "IMPORTANT: No configuration found; assumptions will be made!"
     fi
     include "$conf_dir/config" "$conf_dir/bins" "$conf_dir/funcs" \
-     "$conf_dir/runners" "$conf_dir/manual"
-    if [[ ! -d "$games_dir" ]]; then
+     "$conf_dir/runners" "$conf_dir/manual" || true
+    if [[ ! -d "${games_dir:-}" ]]; then
         debug_print "No games directory defined; assuming $HOME/Games"
         games_dir="$HOME/Games"
         [[ ! -d "$games_dir" ]] || mkdir -p "$games_dir"
     fi
-    if [[ ! -d "$saves_dir" ]]; then
+    if [[ ! -d "${saves_dir:-}" ]]; then
         debug_print "No saves directory defined; assuming $games_dir/Saves"
         saves_dir="$games_dir/Saves"
         [[ ! -d "$saves_dir" ]] || mkdir -p "$saves_dir"
@@ -102,12 +96,13 @@ load_config () {
 
 # Downloads gamecontrollerdb.txt and adds both it and the user db to the env.
 load_controllers () {
-    if is $download_controllerdb; then
-        local tmp="$(mktemp)"
-        shh wget -O "$tmp" "https://raw.githubusercontent.com/gabomdq/" \
-         +"SDL_GameControllerDB/master/gamecontrollerdb.txt" && \
-         mv "$tmp" "$conf_dir/gamecontrollerdb.txt" || rm "$tmp"
+    if is "${download_controllerdb:-}"; then
+        local tmp; tmp=$(mktemp)
+        if shh wget -O "$tmp" "https://raw.githubusercontent.com/gabomdq/" \
+         +"SDL_GameControllerDB/master/gamecontrollerdb.txt"; then
+         mv "$tmp" "$conf_dir/gamecontrollerdb.txt"; else rm "$tmp"; fi
     fi
+    local conf_dir; conf_dir=$(config_dir)
     [[ -f "$conf_dir/gamecontrollerdb.txt" ]] && \
      SDL_GAMECONTROLLERCONFIG="$SDL_GAMECONTROLLERCONFIG
 $(<"$conf_dir/gamecontrollerdb.txt")"
@@ -120,19 +115,19 @@ $(<"$conf_dir/usercontrollerdb.txt")"
 
 # Check to see if the computer is on AC (0) or battery (1).
 check_power () {
-    local ac=$(find /sys/class/power_supply/ | egrep 'AC|ADP' | head -1)
-    [[ -e "$ac/online" ]] && local power="$(<$ac/online)"
+    local ac; ac=$(find /sys/class/power_supply/ | egrep 'AC|ADP' | head -1)
+    local power=""; [[ -e "$ac/online" ]] && power="$(<"$ac/online")"
     if [[ ! "$power" || "$power" -eq 1 ]]; then
         debug_print "Computer is on AC"
         while [[ $# -ge 2 ]]; do
-            export $1="$2"
+            export ${1:?}="${2:?}"
             shift 3
         done
         return 0
     else
         debug_print "Computer is on battery"
         while [[ $# -ge 3 ]]; do
-            export $1="$3"
+            export ${1:?}="${3:?}"
             shift 3
         done
         return 1

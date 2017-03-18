@@ -1,8 +1,14 @@
 #!/bin/bash
 # Arcadia's xinit starter.
-[[ "$arcadia_loaded" ]] || { echo "Arcadia not loaded."; exit 1; }
+[[ "${arcadia_loaded:-}" ]] || { echo "Arcadia not loaded."; exit 1; }
 
-if is $dgpu && is $primex; then
+xinit_display=${xinit_display:-:5}
+xinit_vt=${xinit_vt:-09}
+dgpu=${dgpu:-}
+primex=${primex:-}
+nvidia_config=()
+
+if is "$dgpu" && is "$primex"; then
     arcadia nvidia on
     nvidia_config=(-config xorg.conf.nvidia)
     #nvver=$(ls /usr/lib | sed -nr 's:^nvidia-([0-9]+)$:\1:p' | tail -1)
@@ -10,7 +16,7 @@ if is $dgpu && is $primex; then
 fi
 
 eval "$(pax11publish -i)"
-xinit $(which bash) <(cat <<EOF
+xinit "$(which bash)" <(cat <<EOF
 DISPLAY=$xinit_display
 echo "DISPLAY=$xinit_display" >> /tmp/.arcadia_clean_env
 prime_xrandr
@@ -27,6 +33,6 @@ cat <<EOF
 restore_blanking
 fn xinit_end
 EOF
-) -- $xinit_display vt$xinit_vt ${nvidia_config[@]} -nolisten tcp -br
+) -- "$xinit_display" "vt$xinit_vt" "${nvidia_config[@]}" -nolisten tcp -br
 
-is $dgpu && is $primex && arcadia nvidia off
+is "$dgpu" && is "$primex" && arcadia nvidia off

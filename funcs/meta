@@ -8,17 +8,17 @@ select_file () { true; }
 find_game () {
     game="$(readlink -f "$1")"
     [[ -e "$game" ]] && return
-    [[ -d "$game_dir" ]] || die "Set game_dir in config to use short names."
-    game=$(find "$game_dir" -type d -name "$1" | head -1)
-    [[ -e "$game" ]] || game=$(find "$game_dir" -type f -name "$1.meta")
+    [[ -d "${games_dir:-}" ]] || die "Set games_dir to use short names."
+    game=$(find "${games_dir:-}" -type d -name "${1:-}" | head -1)
+    [[ -e "$game" ]] || game=$(find "${games_dir:-}" -type f -name "${1:-}.meta")
     [[ -e "$game" ]] || die "Unable to find game."
 }
 
 # Automatically detect platform from folder name, otherwise attempt
 # to load the platform meta.
 check_platform () {
-    debug_print "Detecting platform for $1"
-    local dir="$(basename "$1")"
+    debug_print "Detecting platform for ${1:-}"
+    local dir; dir=$(basename "${1:-}"); platform=""
     case "${dir,,}" in
     linux|lnx|native)                         platform="linux" ;;
     windows|wine|win)                         platform="win"   ;;
@@ -40,83 +40,84 @@ check_platform () {
     game\ boy\ advance|gameboy\ advance|gba)  platform="gba"   ;;
     nintendo\ ds|nds)                         platform="nds"   ;;
     playstation\ portable|psp)                platform="psp"   ;;
-    *) include "$1/arcadia-platform.meta" ;; 
+    *) include "${1:-}/arcadia-platform.meta" ;; 
     esac
     [[ "$platform" ]] || { debug_print "Platform not recognized"; return 1; }
     debug_print "Platform detected as $platform"
     return 0
 }
-check_platform! () { check_platform "$1" || die "Couldn't detect platform"; }
 
 load_platform () {
-    platform_dir="$1"
+    platform_dir="${1:-}"
     debug_print "Loading platform meta for $platform_dir"
-    plat_base="$(basename "$platform_dir")"
-    get_exts $platform
+    platform_base="$(basename "$platform_dir")"  # shellcheck disable=SC2034
+    get_exts "${platform:-}"
     include "$platform_dir/arcadia-platform.meta"
 }
 
 # Get a list of extensions that are associated with the platform to assist
 # with file detection.
+declare -a exts
 get_exts () {
-    case "$1" in
+    exts=()
+    case "${1:-}" in
     linux)
-        exts="sh"
+        exts=(sh)
         case "$(uname -m)" in
         x86_64) exts+=" x86_64 x64" ;&
         i?86)   exts+=" x86" ;;
         esac
-        exts+=" bin run"
+        exts+=(bin run)
         ;;
     win)  ;&
-    dos)  exts="bat exe BAT EXE" ;;
-    arc)  exts="zip" ;;
-    nes)  exts="nes zip" ;;
-    gen)  exts="smd gen bin zip" ;;
-    snes) exts="smc sfc zip" ;;
-    n64)  exts="n64 z64 zip" ;;
+    dos)  exts=(bat exe BAT EXE) ;;
+    arc)  exts=(zip) ;;
+    nes)  exts=(nes zip) ;;
+    gen)  exts=(smd gen bin zip) ;;
+    snes) exts=(smc sfc zip) ;;
+    n64)  exts=(n64 z64 zip) ;;
     sat|sdc|psx|ps2|xbox|gcn|wii|psp)
-          exts="cue iso ccd bin"
-          case "$1" in  # Compressed formats.
-          ps2)     exts+=" gz cso" ;;
-          gcn|wii) exts+=" gcz" ;;
+          exts=(cue iso ccd bin)
+          case "${1:-}" in  # Compressed formats.
+          ps2)     exts+=(gz cso) ;;
+          gcn|wii) exts+=(gcz) ;;
           esac ;;
-    gb)   exts="gb zip" ;;
-    gg)   exts="gg zip" ;;
-    gba)  exts="gba zip" ;;
-    nds)  exts="nds zip" ;;
+    gb)   exts=(gb zip) ;;
+    gg)   exts=(gg zip) ;;
+    gba)  exts=(gba zip) ;;
+    nds)  exts=(nds zip) ;;
     esac
 }
 
 is_game () {
-    local game="$(readlink -f "$1")"
-    local base="$(basename "$game")"
+    local game; game="$(readlink -f "${1:-}")"
+    local base; base="$(basename "$game")"
     [[ "$base" =~ ^\. ]] && return 1
     [[ "$base" = "arcadia-platform.meta" ]] && return 1
     [[ "$base" = @(icons|boxarts|screenshots) ]] && return 1
     ( [[ -d "$game" ]] || [[ "${game##*.}" = "meta" ]] || \
-     val_in_list "${game##*.}" $exts ) || return 1
+     val_in_list "${game##*.}" "${exts[@]}" ) || return 1
     return 0
 }
 
 # Infer information about the game and load metas if present.
 load_game () {
-    local game="$(readlink -f "$1")"
+    local game; game=$(readlink -f "${1:-}")
     is_game "$game" || { debug_print "$game is not a game"; return 1; }
-    debug_print "Loading game meta for $1"
+    debug_print "Loading game meta for ${1:-}"
     if [[ ! -e "$game" ]]; then die "Target game does not exist"
     elif [[ -d "$game" ]]; then
         base="$(basename "$game")"
-        name="$base"
+        name="$base"  # shellcheck disable=SC2034
         dir="$game"
         include "$game/arcadia-game.meta"
-        images_dir="$dir"
+        images_dir="$dir"  # shellcheck disable=SC2034
     elif [[ -f "$game" ]]; then
         dir="$(dirname "$game")"
-        images_dir="$dir/.images"
+        images_dir="$dir/.images"  # shellcheck disable=SC2034
         file="$(basename "$game")"
         base="${file%.*}"
-        name="$base"
+        name="$base"  # shellcheck disable=SC2034
         include "$dir/$base.meta"
         include "$dir/.$base.meta"
         [[ "${game##*.}" == "meta" ]] && . "$game"
@@ -125,18 +126,19 @@ load_game () {
 }
 
 # Check various icon folders for the specified image type.
+declare -A img
 find_image () {
     local type="$1"
-    [[ -e "${!type}" ]] && return 0
+    [[ -e "${img[$type]}" ]] && return 0
     for e in png jpg gif ico bmp; do
         for n in "$type.$e" ".$type.$e" \
          "arcadia-$type.$e" ".arcadia-$type.$e"; do
             debug_print "Looking for $type: $n in $dir"
-            [[ -e "$dir/$n" ]] && { export $type="$dir/$n"; return 0; }
+            [[ -e "$dir/$n" ]] && { img[$type]="$dir/$n"; return 0; }
         done
         for d in "$dir/${type}s" "$dir/.${type}s"; do
             debug_print "Looking for $type: $base.$e in $d"
-            [[ -e "$d/$base.$e" ]] && { export $type="$d/$base.$e"; return 0; }
+            [[ -e "$d/$base.$e" ]] && { img[$type]="$d/$base.$e"; return 0; }
         done
     done
     return 1

@@ -1,36 +1,21 @@
 #!/bin/bash
 # Functions related to running games.
 
-# Set an environment variable and also save it to the clean env.
-save_env () {
-    local var="$1"
-    local val="$2"
-    [[ "$val" ]] || val="${!var}"
-    export $var=$val
-    echo "export $var='$val'" >> /tmp/.arcadia_clean_env
-}
-
-# Run a command with the environment from before loading Arcadia.
-clean_env () {
-    env -i "$(which bash)" <(
-        echo "source /tmp/.arcadia_clean_env"
-        for w in "$@"; do echo -n '"'"$w"'" '; done; echo
-    );
-}
-
 # Look for a file to run, checking symlinks and known file extensions.
+declare -a exts
 find_file () {
-    [[ -f "$dir/$file" ]] && return 0
-    file="$(basename "$(readlink -f "$dir/arcadia-game")")"
-    [[ -f "$dir/$file" ]] && return 0
+    [[ -f "${dir:-/${file:-}" ]] && return 0
+    file="$(basename "$(readlink -f "${dir:-}/arcadia-game")")"
+    [[ -f "${dir:-}/$file" ]] && return 0
     local e
-    for e in $exts; do
-        file="$(find "$dir" -maxdepth 1 -name "*.$e" -printf "%f\n" | head -n1)"
-        [[ -f "$dir/$file" ]] && return 0
+    for e in "${exts[@]}"; do
+        file="$(find "${dir:-}" -maxdepth 1 -name "*.$e" -printf "%f\n" | head -n1)"
+        [[ -f "${dir:-}/$file" ]] && return 0
     done
-    [[ ! -f "$dir/$file" ]] && die "Couldn't find game file."
+    [[ ! -f "${dir:-}/$file" ]] && die "Couldn't find game file."
 }
 
+# TODO: replace this with generic gui code.
 # Implementation of file selection. run_game rebinds select_game to this.
 _select_file () {
     file=$(yad --center --undecorated --list --no-headers --separator "" \
@@ -38,8 +23,13 @@ _select_file () {
     [[ $? -eq 0 ]] || die "Canceled."
 }
 
+# Returns 0 if optirun is currently in use.
+in_optirun () {
+    
+}
+
 run_game () {
-    cd "$dir"
+    cd "${dir:?}"
     
     fn game_before
     
@@ -47,13 +37,13 @@ run_game () {
     start_window_watchers
     
     check_dgpu
-    if is $dgpu && ! is $primex; then
+    if is "${dgpu:-}" && ! is "${primex:-}"; then
         debug_print "Using discrete GPU to play $name."
         # Terrible crappy hack. :|
         args=""; for a in "$@"; do args+="\"$a\""; done
         bin optirun -b ${optirun_backend:-primus} \
           bash -c "game_exec_wrap $args" || \
-        { save_env DRI_PRIME 1; game_exec_wrap "$@"; }
+        { export DRI_PRIME=1; game_exec_wrap "$@"; }
     else debug_print "Starting $name."; fn! game_exec "$@"; fi
     
     stop_window_watchers
@@ -66,19 +56,6 @@ run_game () {
 check_dgpu () {
     [[ "${dgpu,,}" == "force" || $dgpu -eq 2 ]] && { dgpu=yes; return 0; }
     check_power || dgpu=no
-}
-
-# Exports primus env vars if they exist before running game_exec.
-game_exec_wrap () {
-    if is $dgpu; then
-        debug_print "Saving Bumblebee/Primus vars."
-        save_env BUMBLEBEE_SOCKET
-        save_env PRIMUS_DISPLAY
-        save_env PRIMUS_libGLa
-        save_env PRIMUS_libGLd
-        save_env LD_LIBRARY_PATH
-    fi
-    fn! game_exec "$@"
 }
 
 # Disable compositor on various WMs if compositing is enabled.

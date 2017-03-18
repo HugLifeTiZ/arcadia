@@ -1,21 +1,23 @@
 #!/bin/bash
 # Functions related to configuring displays.
 
+declare -A modes
+
 # Convenience function to run all the display stuff in the right order.
 config_outputs () {
     detect_outputs
     detect_mode
     config_mode
-    is $xinit && arrange_outputs
-    (is $xinit || is $move_mouse) && xdotool mousemove 9999 9999
+    in_xinit && arrange_outputs
+    (in_xinit || is "${move_mouse:-}") && xdotool mousemove 9999 9999
 }
 
 # Finds out which of the preferred outputs is available and activates it.
 # If the user has specified a custom mode for it, use it.
 detect_outputs () {
-    conn_outputs="$(xrandr | sed -nr 's:^(.*) conn.*:\1:p')"
-    [[ "$outputs" ]] || outputs="$conn_outputs"
-    local output
+    conn_outputs=$(xrandr | sed -nr 's:^(.*) conn.*:\1:p')
+    outputs="${outputs:-conn_outputs}"
+    local output; local main_output=""
     for output in $outputs; do
         if echo "$conn_outputs" | shh grep "$output"; then
             main_output="$output"; break
@@ -23,28 +25,28 @@ detect_outputs () {
     done
     debug_print "Main output detected as $main_output"
     
-    main_varname=${main_output,,} main_varname=${main_varname/-/_}
-    custom_mode="$(eval "echo \$mode_${main_varname,,}")"
-    echo $custom_mode
-    [[ "$custom_mode" ]] && \
-     xrandr --output $main_output --primary --mode $custom_mode || \
-     xrandr --output $main_output --primary --preferred
+    local custom_mode=${modes[${main_output,,}]}
+    debug_print "Using custom mode $custom_mode"
+    if [[ "$custom_mode" ]]; then
+     xrandr --output "$main_output" --primary --mode "$custom_mode"; else
+     xrandr --output "$main_output" --primary --preferred; fi
 }
 
 # Detect the mode in use on the main output.
 detect_mode () {
-    main_mode="$(xrandr | sed -nr "s:$main_output.* ([0-9]+x[0-9]+).*:\1:p")"
-    main_width="$(echo $main_mode | cut -dx -f1)"
-    main_height="$(echo $main_mode | cut -dx -f2)"
+    main_mode=$(xrandr | sed -nr "s:$main_output.* ([0-9]+x[0-9]+).*:\1:p")
+    main_width=$(echo "$main_mode" | cut -dx -f1)
+    main_height=$(echo "$main_mode" | cut -dx -f2)
     debug_print "$main_output is using $main_mode"
 }
 
 # Configures custom mode as specified, including requested scale.
 # Can scale the display sensitive to aspect ratio. Doesn't support 5:4 well.
 config_mode () {
-    if [[ "$scale_height" ]]; then
-        if [[ ! "$scale_width" ]]; then
+    if [[ "${scale_height:-}" ]]; then
+        if [[ ! "${scale_width:-}" ]]; then
             debug_print "Inferring scale width using aspect ratio"
+            # why the fuck? can't bc do this?
             scale_width="$(python -c "
 from math import ceil
 print int(ceil($main_width.0 / $main_height * $scale_height))")"
@@ -52,7 +54,7 @@ print int(ceil($main_width.0 / $main_height * $scale_height))")"
         debug_print "Scaling display to ${scale_width}x${scale_height}"
         main_mode="${scale_width}x${scale_height}"
         xrandr --output "$main_output" --scale-from "$main_mode"
-    elif [[ "$mode" ]]; then
+    elif [[ "${mode:-}" ]]; then
         debug_print "Setting mode on $output to $mode"
         xrandr --output "$main_output" --mode "$mode"
         main_mode="$mode"
@@ -61,15 +63,14 @@ print int(ceil($main_width.0 / $main_height * $scale_height))")"
 
 # If the user has requested clone or single outputs, make it happen.
 arrange_outputs () {
-    [[ "$(echo $conn_outputs | wc -w)" -le 1 ]] && return 0
-    local xrandr_args=()
-    local output
+    [[ "$(echo "$conn_outputs" | wc -w)" -le 1 ]] && return 0
+    local xrandr_args=(); local output
     for output in $conn_outputs; do
         if [[ "$output" != "$main_output" ]]; then
             xrandr_args+=(--output "$output")
-            is $clone_output && \
+            is "${clone_output:-}" && \
              xrandr_args+=(--same-as "$main_output" --scale-from "$main_mode")
-            is $single_output && xrandr_args+=(--off)
+            is "${single_output:-}" && xrandr_args+=(--off)
         fi
     done
     xrandr "${xrandr_args[@]}"
@@ -79,17 +80,18 @@ arrange_outputs () {
 # the preferred, they can tell Arcadia about it and it will restore it.
 restore_mode () {
     debug_print "Restoring monitor mode configuration."
-    if [[ "$restore_mode" ]] || [[ "$restore_scale" ]] \
-     || [[ "$restore_scale_from" ]]; then
-        if [[ "$restore_scale_from" ]]; then
+    if [[ "${restore_mode:-}" ]] || [[ "${restore_scale:-}" ]] \
+     || [[ "${restore_scale_from:-}" ]]; then
+        local mode_args=()
+        if [[ "${restore_scale_from:-}" ]]; then
             local scale_args=(--scale-from "$restore_scale_from")
-        elif [[ "$restore_scale" ]]; then
+        elif [[ "${restore_scale:-}" ]]; then
             local scale_args=(--scale "$restore_scale")
         fi
-        if [[ "$restore_mode" ]]; then local mode_args=(--mode "$restore_mode")
-        else local mode_args=(--preferred); fi
-        xrandr --output "$main_output" "${mode_args[@]}" "${scale_args[@]}"
-    else xrandr --output "$main_output" --preferred --scale 1x1; fi
+        if [[ "${restore_mode:-}" ]]; then mode_args=(--mode "$restore_mode")
+        else mode_args=(--preferred); fi
+        xrandr --output "${main_output:-}" "${mode_args[@]}" "${scale_args[@]}"
+    else xrandr --output "${main_output:-}" --preferred --scale 1x1; fi
 }
 
 # Does not inhibit screensaver at all.

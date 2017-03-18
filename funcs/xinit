@@ -1,9 +1,15 @@
 #!/bin/bash
 
+declare -A xinit_wm
+
+in_xinit () {
+    [[ "${DISPLAY:-}" == "${xinit_display:-:5}" ]] && pgrep arcxinit
+}
+
 start_wm () {
     debug_print "Starting window manager"
     # User knows best.
-    if [[ "$xinit_wm" ]]; then $xinit_wm &
+    if [[ "${xinit_wm[0]}" ]]; then "${xinit_wm[@]}" &
     # Else detect based on what is available. We don't use the bin function
     # because it's overkill and also it can't run a program without args;
     # only determine if it exists when args are not passed.
@@ -20,7 +26,8 @@ start_wm () {
 # look a lot nicer.
 set_background () {
     bin feh || return 0
-    if is $xinit_bg_xfconf && bin xfconf-query; then
+    local conf_dir; conf_dir=$(config_dir)
+    if is "${xinit_bg_xfconf:-}" && bin xfconf-query; then
         feh --bg-fill "$(xfconf-query -c xfce4-desktop -p \
          /backdrop/screen0/monitor0/workspace0/last-image)"
     elif [[ -e "$conf_dir/xinit_bg" ]]; then
@@ -37,14 +44,14 @@ set_background () {
 start_tray () {
     debug_print "Starting stalonetray"
     shh stalonetray -t --window-layer bottom &
-    if is $hide_tray; then
+    if is "${hide_tray:-}"; then
         (sleep 1 && xdotool search --class stalonetray windowunmap) &
     fi
 }
 
 # Allows use of the intel outputs when running on the dgpu.
 prime_xrandr () {
-    is $dgpu && is $primex || return
+    if ! is "${dgpu:-}" || ! is "${primex:-}"; then return; fi
     #prime-offload
     xrandr --setprovideroutputsource modesetting NVIDIA-0
     xrandr --auto

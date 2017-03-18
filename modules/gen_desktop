@@ -1,22 +1,25 @@
 #!/bin/bash
 # Generates desktop files with copious metadata.
-[[ "$arcadia_loaded" ]] || { echo "Arcadia not loaded."; exit 1; }
-assert -d "$games_dir"
+[[ "${arcadia_loaded:-}" ]] || { echo "Arcadia not loaded."; exit 1; }
+assert -d "${games_dir:-}"
 
-target_dir="$1"
+target_dir="${1:-}"
 [[ -d "$target_dir" ]] || target_dir="$(data_dir applications/arcadia)"
-rm -r "$target_dir/"*
-dir_dir="$(data_dir desktop-directories)"
+rm -r "${target_dir:?}/"*
+dir_dir="$(data_dir desktop-directories)"  # dumbass variable name
 
-for pdir in "$games_dir"/*; do
+for pdir in "${games_dir:-}"/*; do
     if [[ -d "$pdir" ]] && check_platform "$pdir"; then
         load_platform "$pdir"
+        # shellcheck disable=SC2154
         mkdir -p "$target_dir/$platform"
         gen_directory "$dir_dir/arcadia-$platform.directory"
         echo " == Generating files for $(basename "$pdir") == "
         for game in "$pdir"/*; do
+            # shellcheck disable=SC2154
             if load_game "$game"; then
                 echo "Generating file for $name"
+                # shellcheck disable=SC2154
                 gen_desktop "$target_dir/$platform/$base.desktop"
             fi
             clear_game

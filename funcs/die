@@ -1,0 +1,9 @@
+#!/bin/bash
+# These functions are split into a separate file because ShellCheck thinks
+# their names are invalid and fails to parse them.
+
+fn! () { fn "$@" || die "Couldn't run ${1:-}"; }
+include! () { include "${1:?}" || die "Couldn't source ${1:-}"; }
+bin! () { bin "$@" || die "Couldn't find ${1:-}"; }
+
+check_platform! () { check_platform "$1" || die "Couldn't detect platform"; }

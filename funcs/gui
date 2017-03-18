@@ -8,7 +8,7 @@ select_one () {
 }
 
 yad_select_one () {
-    local label="$1"; shift
+    local label="${1:-}"; shift
     local size=${font_size:-11}
     yad --undecorated --center \
      --width $((size * 16)) --height $(($# * size + size * 2 + 48)) \
@@ -19,7 +19,7 @@ yad_select_one () {
 }
 
 zenity_select_one () {
-    local label="$1"; shift
+    local label="${1:-}"; shift
     local size=${font_size:-11}
     zenity --title "$label" --text "<big><b>$label</b></big>" \
      --width $((size * 16)) --height $(($# * size + size * 2 + 64)) \

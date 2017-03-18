@@ -2,47 +2,46 @@
 # Wrapper for all of Arcadia's modules.
 
 # Include guard.
-if [[ -z "$arcadia_loaded" ]]; then
+if [[ -z "${arcadia_loaded:-}" ]]; then
 
-# Save the current environment.
-echo "set -o allexport" > /tmp/.arcadia_clean_env
-set | egrep -v '^(BASH.*|SHELLOPTS|EUID|PPID|UID)=' >> /tmp/.arcadia_clean_env
-echo "set +o allexport" >> /tmp/.arcadia_clean_env
-
-set -o allexport +o monitor
-if [[ "$ARCADIA_TRACE" ]]; then set -o xtrace; fi
-export SHELLOPTS
+set -eu -o pipefail +o monitor
+if [[ "${ARCADIA_TRACE:-}" ]]; then set -o xtrace; fi
 
 # Find Arcadia.
-arcadia_bin="$(readlink -f "$0")"
-this_dir="$(dirname "$arcadia_bin")"
-for arcadia_dir in "$arcadia_path" "$ARCADIA_PATH" "$this_dir" \
- "$(readlink -f "$this_dir/../share/arcadia")" "$XDG_DATA_HOME/arcadia" \
- "$HOME/.local/share/arcadia"; do if [[ -f "$arcadia_dir/runners/pc" ]]; then
-    arcadia_path="$arcadia_dir"
+arcadia_bin=$(readlink -f "${0:-}"); export arcadia_bin
+this_dir=$(dirname "$arcadia_bin")
+for arcadia_dir in "${arcadia_path:-}" "${ARCADIA_PATH:-}" "$this_dir" \
+ "$(readlink -f "$this_dir/../share/arcadia")" \
+ "${XDG_DATA_HOME:-$HOME/.local/share}/arcadia"; do
+ if [[ -f "$arcadia_dir/runners/pc" ]]; then
+    export arcadia_path="$arcadia_dir"
     break
 fi; done; unset arcadia_dir
-[[ ! -d "$arcadia_path" ]] && { echo "FATAL: Couldn't find Arcadia"; exit 1; }
+[[ ! -d "$arcadia_path" ]] && { echo "FATAL: Couldn't find Arcadia!"; exit 1; }
 
 # Load up all of Arcadia's stuff.
 for funcs in "$arcadia_path/funcs/"*;   do . "$funcs"; done
 for funcs in "$arcadia_path/runners/"*; do . "$funcs"; done
 unset funcs
-xinit_display=":5"
-xinit_vt="09"
-download_controllerdb=true
 load_config
 load_controllers
-arcadia_loaded=1
+export arcadia_loaded=1
 
 fi
 
 # Find the requested module.
-module="$1"; shift; [[ "$module" ]] || exit
-for modules_dir in "$arcadia_path" "$XDG_DATA_HOME/arcadia" \
- "$HOME/.local/share/arcadia"; do if [[ -x "$modules_dir/modules/$cmd" ]]; then
+module="${1:-}"; shift; [[ "$module" ]] || exit
+for modules_dir in "$arcadia_path" \
+ "${XDG_DATA_HOME:-$HOME/.local/share}/arcadia"; do
+ if [[ -e "$modules_dir/modules/$module" ]]; then
     # This is important so that scripts can detect if Arcadia's x server is
     # running; the most reliable way to do that is pgrep -f arcxinit.
-    exec "$(readlink -f "$modules_dir/modules/$module")" "$@"
+    mod_file=$(readlink -f "$modules_dir/modules/$module")
+    if file "$mod_file" | grep -q "Bourne-Again shell script"; then
+        # If it's a bash script, we source it to run it in the current context
+        # so that nothing needs to be exported.
+        . "$mod_file" "$@"; else exec "$mod_file" "$@"
+    fi
+    exit
 fi; done; unset modules_dir
-die "Module $cmd not found."
+die "Module $module not found."
