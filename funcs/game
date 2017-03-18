@@ -4,7 +4,7 @@
 # Look for a file to run, checking symlinks and known file extensions.
 declare -a exts
 find_file () {
-    [[ -f "${dir:-/${file:-}" ]] && return 0
+    [[ -f "${dir:-}/${file:-}" ]] && return 0
     file="$(basename "$(readlink -f "${dir:-}/arcadia-game")")"
     [[ -f "${dir:-}/$file" ]] && return 0
     local e
@@ -28,7 +28,8 @@ in_optirun () {
     pgrep optirun
 }
 
-# Moved here because we're not exporting everything anymore.
+# Moved here because we're not exporting everything anymore. It needs to be
+# able to run in the current shell context.
 run () {
     fn runner_start
     disable_blanking
@@ -54,9 +55,7 @@ run_game () {
     check_dgpu
     if is "${dgpu:-}" && ! is "${primex:-}" && ! in_optirun; then
         debug_print "Using discrete GPU to play ${name:-}."
-        # Terrible crappy hack. :|
-        args=""; for a in "$@"; do args+="\"$a\""; done
-        bin optirun -b ${optirun_backend:-primus} \
+        bin optirun -b "${optirun_backend:-primus}" \
           "${arcadia_bin:?}" run_game "$@" || export DRI_PRIME=1
     else debug_print "Starting ${name:-}."; fn! game_exec "$@"; fi
     
@@ -68,19 +67,20 @@ run_game () {
 
 # Overrides dgpu variable to off if on battery.
 check_dgpu () {
+    dgpu=${dgpu:-no}
     [[ "${dgpu,,}" == "force" || $dgpu -eq 2 ]] && { dgpu=yes; return 0; }
     check_power || dgpu=no
 }
 
 # Disable compositor on various WMs if compositing is enabled.
 stop_compositor () {
-    is $disable_compositor || return 0
+    is "${disable_compositor:-}" || return 0
     if pgrep compton; then
         compositor=compton
-        compton_args="$(</proc/$(pgrep -n compton)/cmdline)"
+        compton_args=($(<"/proc/$(pgrep -n compton)/cmdline"))
         pkill compton
     elif pgrep xfwm4; then
-        if is $(xfconf-query -c xfwm4 -p /general/use_compositing); then
+        if is "$(xfconf-query -c xfwm4 -p /general/use_compositing)"; then
             compositor=xfwm4
             xfconf-query -c xfwm4 -p /general/use_compositing -t bool -s false
         fi
@@ -90,9 +90,9 @@ stop_compositor () {
 
 # Restart compositor based on what was found in stop_compositor.
 restart_compositor () {
-    is $disable_compositor || return 0
+    is "${disable_compositor:-}" || return 0
     case $compositor in
-        compton) $compton_args & disown ;;
+        compton) "${compton_args[@]}" & disown ;;
         xfwm4)
             xfconf-query -c xfwm4 -p /general/use_compositing -t bool -s true ;;
         # TODO: More WMs
@@ -101,33 +101,33 @@ restart_compositor () {
 
 # Activate padfiler functionality if it's installed.
 start_padfiler () {
-    if [[ "$padfile" ]] && bin padfiler; then
-        debug_print "Starting padfiler: $padfile $padfile2"
-        padfiler start "$padfile" "$padfile2"
+    if [[ "${padfile:-}" ]] && bin padfiler; then
+        debug_print "Starting padfiler: ${padfile:-} ${padfile2:-}"
+        padfiler start "${padfile:-}" "${padfile2:-}"
     else
-        [[ "$lock_js" ]] && padfiler lock-js
-        [[ "$lock_event" ]] && padfiler lock-event
+        [[ "${lock_js:-}" ]] && padfiler lock-js
+        [[ "${lock_event:-}" ]] && padfiler lock-event
     fi
 }
 
 stop_padfiler () {
-    if [[ "$padfile" ]] && bin padfiler; then
+    if [[ "${padfile:-}" ]] && bin padfiler; then
         debug_print "Stopping padfiler"
         padfiler stop
-    elif [[ "$lock_js$lock_event" ]]; then padfiler unlock
+    elif [[ "${lock_js:-}${lock_event:-}" ]]; then padfiler unlock
     fi
 }
 
 start_window_watchers () {
-    if [[ -d "$devilspie2_dir" ]]; then
-        debug_print "Starting devilspie2 in $devilspie2_dir"
-        bin devilspie2 -f "$devilspie2_dir" &
+    if [[ -d "${devilspie2_dir:-}" ]]; then
+        debug_print "Starting devilspie2 in ${devilspie2_dir:-}"
+        bin devilspie2 -f "${devilspie2_dir:-}" &
         devilspie2_pid=$!
-    elif [[ -f "$kpie_file" ]]; then
-        debug_print "Starting kpie with $kpie_file"
-        bin kpie "$kpie_file" &
+    elif [[ -f "${kpie_file:-}" ]]; then
+        debug_print "Starting kpie with ${kpie_file:-}"
+        bin kpie "${kpie_file:-}" &
         kpie_pid=$!
     fi
     return 0
 }
-stop_window_watchers () { kill $devilspie2_pid $kpie_pid; return 0; }
+stop_window_watchers () { kill "${devilspie2_pid:-}" "${kpie_pid:-}" || true; }

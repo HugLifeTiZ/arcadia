@@ -4,33 +4,33 @@
 # All of these are currently TODO. They almost certainly need args added.
 
 runner_fceux () {
-    bin fceux "$dir/$file"
+    bin fceux "${dir:?}/${file:?}"
 }
 
 runner_snes9x () {
-    bin snes9x "$dir/$file"
+    bin snes9x "${dir:?}/${file:?}"
 }
 
 runner_snes9xgtk () {
-    bin snes9xgtk "$dir/$file"
+    bin snes9xgtk "${dir:?}/${file:?}"
 }
 
 runner_zsnes () {
-    bin zsnes "$dir/$file"
+    bin zsnes "${dir:?}/${file:?}"
 }
 
-runner_gens-gs () {
-    bin gens-gs "$dir/$file"
+runner_gens_gs () {
+    bin gens-gs "${dir:?}/${file:?}"
 }
 
 runner_gens () {
-    bin gens "$dir/$file"
+    bin gens "${dir:?}/${file:?}"
 }
 
 runner_fusion () {
-    bin fusion "$dir/$file"
+    bin fusion "${dir:?}/${file:?}"
 }
 
 runner_vba () {
-    bin vba "$dir/$file"
+    bin vba "${dir:?}/${file:?}"
 }

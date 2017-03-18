@@ -1,46 +1,47 @@
 #!/bin/bash
 
 # Default precedence rules. Overrideable in config.
-dos_runners="dosbox"
-arc_runners="retroarch"
-nes_runners="fceux retroarch mednafen"
-snes_runners="snes9x snes9xgtk zsnes retroarch mednafen"
-gen_runners="gens-gs fusion retroarch mednafen gens"
-sat_runners="yabause retroarch"
-n64_runners="mupen64plus mupen64 pj64 retroarch"
-psx_runners="pcsx epsxe retroarch mednafen psx"
-sdc_runners="reicast lxdream"
-ps2_runners="pcsx2"
-gcn_runners="dolphin-emu"
-wii_runners="dolphin-emu"
-gb_runners="vba retroarch mednafen"
-gg_runners="mednafen"
-gba_runners="vba retroarch mednafen"
-nds_runners="desmume ideas retroarch"
-psp_runners="ppsspp jpcsp retroarch"
+declare -A runners=(
+    [dos]="dosbox"
+    [arc]="retroarch"
+    [nes]="fceux retroarch mednafen"
+    [snes]="snes9x snes9xgtk zsnes retroarch mednafen"
+    [gen]="gens-gs fusion retroarch mednafen gens"
+    [sat]="yabause retroarch"
+    [n64]="mupen64plus mupen64 pj64 retroarch"
+    [psx]="pcsx epsxe retroarch mednafen psx"
+    [sdc]="reicast lxdream"
+    [ps2]="pcsx2"
+    [gcn]="dolphin-emu"
+    [wii]="dolphin-emu"
+    [gb]="vba retroarch mednafen"
+    [gg]="mednafen"
+    [gba]="vba retroarch mednafen"
+    [nds]="desmume ideas retroarch"
+    [psp]="ppsspp jpcsp retroarch"
+)
 
 # Set runner based on requested platform.
 set_runner () {
     [[ "$(type -t game_exec)" = "function" ]] && return 0
-    case $1 in
+    case "${1:?}" in
     linux)
         game_exec () { runner_linux "$@" ; }
-        [[ -n "$steam_id" ]] && game_exec () { runner_steam ; }
+        [[ -n "${steam_id:-}" ]] && game_exec () { runner_steam ; }
         ;;
     win)
         bin! wine
         game_exec () { runner_wine "$@" ; }
-        [[ -n "$steam_id" ]] && game_exec () { runner_steam_wine ; }
+        [[ -n "${steam_id:-}" ]] && game_exec () { runner_steam_wine ; }
         ;;
     *)
-        var="${1}_runners"
-        for prog in ${!var}; do if bin $prog; then
+        for prog in ${runners[$1]}; do if bin "$prog"; then
             # For retroarch, we also have to make sure we have a core.
             [[ "$prog" == "retroarch" ]] && { libretro_find_core || continue; }
             eval "game_exec () { runner_${prog//-/_} ; }"
             return 0
         fi; done
-        die "Couldn't find a runner for $1"
+        die "Couldn't find a runner for ${1:?}"
         ;;
     esac
     export game_exec

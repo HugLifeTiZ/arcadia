@@ -4,52 +4,53 @@
 runner_mednafen () {
     local sound_device="default"
     pgrep pulseaudio && sound_device="pulse"
-    local module="$platform"
+    platform="${platform:?}"; local module="$platform"
     [[ "$platform" = "gen" ]] && module="md"
-    local med_saves="$saves_dir/$platform/mednafen"; mkdir -p "$med_saves"
+    local med_saves="${saves_dir:?}/$platform/mednafen"; mkdir -p "$med_saves"
     bin! mednafen -path_sav "$med_saves" -path_state "$med_saves" \
-     -sound.device "$med_sound_device" -force_module "$module" \
-     "$dir/$file"
+     -sound.device "$sound_device" -force_module "$module" \
+     "${dir:?}/${file:?}"
 }
 
 
 # RetroArch is a runner that has its own subset of runners. Bluh.
-libretro_cores_arc="mame fbalpha fba"  # It's probably better to set this per-game.
-libretro_cores_nes="fceumm nestopia quicknes"
-libretro_cores_gen="picodrive genesis_plus_gx"
-libretro_cores_snes="bsnes_mercury_accuracy bsnes_mercury_balanced"
-libretro_cores_snes+="bsnes_mercury_performance bsnes_accuracy bsnes_balanced"
-libretro_cores_snes+="bsnes_performance snes9x snes9x_next"
-libretro_cores_sat="yabause"
-libretro_cores_psx="mednafen_psx beetle_psx"
-libretro_cores_n64="glupen64 mupen64plus"
-libretro_cores_sdc="reicast"
-libretro_cores_gb="mednafen_vb beetle_vb gambatte"
-libretro_cores_gg="genesis_plus_gx"
-libretro_cores_gba="mednafen_gba beetle_gba mgba vbam vba_next gpsp"
-libretro_cores_nds="desmume"
-libretro_cores_psp="ppsspp"
+declare -A libretro_cores=(
+    [arc]="mame fbalpha fba"  # It's probably better to set this per-game.
+    [nes]="fceumm nestopia quicknes"
+    [gen]="picodrive genesis_plus_gx"
+    [snes]="bsnes_mercury_accuracy bsnes_mercury_balanced"
+    [sat]="yabause"
+    [psx]="mednafen_psx beetle_psx"
+    [n64]="glupen64 mupen64plus"
+    [sdc]="reicast"
+    [gb]="mednafen_vb beetle_vb gambatte"
+    [gg]="genesis_plus_gx"
+    [gba]="mednafen_gba beetle_gba mgba vbam vba_next gpsp"
+    [nds]="desmume"
+    [psp]="ppsspp"
+)
+libretro_cores[snes]+="bsnes_mercury_performance bsnes_accuracy bsnes_balanced"
+libretro_cores[snes]+="bsnes_performance snes9x snes9x_next"
 
 runner_retroarch () {
     libretro_find_core
-    for c in "$platform_dir/retroarch.cfg" "$dir/retroarch.cfg"; do
+    local configs=(); local args=();
+    for c in "${platform_dir:?}/retroarch.cfg" "${dir:?}/retroarch.cfg"; do
         [[ -e "$c" ]] && configs+="$c;"; done
-    if [[ "$configs" ]]; then
+    if [[ "${configs[0]}" ]]; then
         echo 'config_save_on_exit = "false"' > /tmp/.ra-append.cfg
         args+=(--appendconfig "${configs//;/|}/tmp/.ra-append.cfg")
     fi
-    echo bin retroarch "${args[@]}" -L "$libretro_core" \
-     -s "$saves_dir/$platform" -S "$saves_dir/$platform" "$dir/$file"
-    bin retroarch "${args[@]}" -L "$libretro_core" \
-     -s "$saves_dir/$platform" -S "$saves_dir/$platform" "$dir/$file"
+    bin retroarch "${args[@]}" -L "${libretro_core:?}" \
+     -s "${saves_dir:?}/${platform:?}" -S "${saves_dir:?}/${platform:?}" \
+     "$dir/$file"
     rm /tmp/.ra-append.cfg
 }
 
 libretro_find_core () {
-    cores_var="libretro_cores_$platform"
-    for libretro_dir in "$libretro_cores_dir" \
+    for libretro_dir in "${libretro_cores_dir:-}" \
      $(find /usr/lib -type d -name libretro); do
-        for core in ${!cores_var}; do
+        for core in ${libretro_cores[$platform]]}; do
             libretro_core="$libretro_dir/${core}_libretro.so"
             [[ -e "$libretro_core" ]] && { break 2; }
         done

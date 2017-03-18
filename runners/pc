@@ -1,17 +1,18 @@
 #!/bin/bash
 # PC runners, including DOS.
 
-runner_linux () { "./$file" "$@"; }
-runner_wine ()  { bin wine "./$file" "$@"; }
+runner_linux () { "./${file:?}" "$@"; }
+runner_wine ()  { bin! wine "./${file:?}" "$@"; }
 
 runner_dosbox () {
-    SDL_VIDEO_X11_DGAMOUSE=0
-    bin dosbox -noautoexec -exit -userconf -conf \
-     <(echo "$dosbox_conf") "$file"
+    export SDL_VIDEO_X11_DGAMOUSE=0
+    bin! dosbox -noautoexec -exit -userconf -conf \
+     <(echo "${dosbox_conf:-}") "${file:?}"
 }
 
+declare -a steam_args
+
 runner_steam () {
-    bin! steam
     if ! pgrep steam; then
     (
         debug_print "Steam not running; starting background process to kill it"
@@ -22,10 +23,10 @@ runner_steam () {
         done
         debug_print "Child monitor PID is $steam_pid"
         while [[ -e /proc/$steam_pid ]]; do sleep 1; done
-        clean_env "$steam_bin" -shutdown
+        bin! steam -shutdown
     ) &
     fi
-    clean_env "$steam_bin" -applaunch $steam_id "${steam_args[@]}"
+    bin! steam -applaunch "${steam_id:?}" "${steam_args[@]}"
 }
 
 runner_steam_wine () {
@@ -49,5 +50,5 @@ runner_steam_wine () {
         bin wine "$steam_wine_bin" -shutdown
     ) &
     fi
-    bin wine "$steam_wine_bin" -applaunch $steam_id "${steam_args[@]}"
+    bin! wine "$steam_wine_bin" -applaunch "${steam_id:?}" "${steam_args[@]}"
 }

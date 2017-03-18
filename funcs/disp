@@ -16,10 +16,11 @@ config_outputs () {
 # Finds out which of the preferred outputs is available and activates it.
 # If the user has specified a custom mode for it, use it.
 detect_outputs () {
-    [[ "${outputs[0]}"]] || outputs=($(xrandr | sed -nr 's:^(.*) conn.*:\1:p'))
+    conn_outputs=($(xrandr | sed -nr 's:^(.*) conn.*:\1:p'))
+    [[ "${outputs[0]}" ]] || local outputs=( "${conn_outputs[@]}" )
     local output; local main_output=""
     for output in "${outputs[@]}"; do
-        if echo "$conn_outputs" | shh grep "$output"; then
+        if echo "${conn_outputs[@]}" | shh grep "$output"; then
             main_output="$output"; break
         fi
     done
@@ -63,9 +64,9 @@ print int(ceil($main_width.0 / $main_height * $scale_height))")"
 
 # If the user has requested clone or single outputs, make it happen.
 arrange_outputs () {
-    [[ "$(echo "$conn_outputs" | wc -w)" -le 1 ]] && return 0
+    [[ "${#conn_outputs[@]}" -le 1 ]] && return 0
     local xrandr_args=(); local output
-    for output in $conn_outputs; do
+    for output in "${conn_outputs[@]}"; do
         if [[ "$output" != "$main_output" ]]; then
             xrandr_args+=(--output "$output")
             is "${clone_output:-}" && \
