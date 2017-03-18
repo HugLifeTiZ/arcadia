@@ -2,6 +2,7 @@
 # Functions related to configuring displays.
 
 declare -A modes
+declare -a outputs
 
 # Convenience function to run all the display stuff in the right order.
 config_outputs () {
@@ -15,10 +16,9 @@ config_outputs () {
 # Finds out which of the preferred outputs is available and activates it.
 # If the user has specified a custom mode for it, use it.
 detect_outputs () {
-    conn_outputs=$(xrandr | sed -nr 's:^(.*) conn.*:\1:p')
-    outputs="${outputs:-conn_outputs}"
+    [[ "${outputs[0]}"]] || outputs=($(xrandr | sed -nr 's:^(.*) conn.*:\1:p'))
     local output; local main_output=""
-    for output in $outputs; do
+    for output in "${outputs[@]}"; do
         if echo "$conn_outputs" | shh grep "$output"; then
             main_output="$output"; break
         fi

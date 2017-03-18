@@ -1,15 +1,4 @@
 #!/bin/bash
 # Runs an arbitrary command with Arcadia's various conveniences.
 [[ "${arcadia_loaded:-}" ]] || { echo "Arcadia not loaded."; exit 1; }
-
-fn runner_start
-disable_blanking
-stop_compositor
-if is "${xinit:-}" && ! in_xinit; then
-    fn runner_before_xinit
-    "${arcadia_bin:?}" xinit "$@";
-    fn runner_after_xinit
-else "$@"; fi
-restart_compositor
-restore_blanking
-fn runner_end
+run "$@"

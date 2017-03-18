@@ -25,7 +25,22 @@ _select_file () {
 
 # Returns 0 if optirun is currently in use.
 in_optirun () {
-    
+    pgrep optirun
+}
+
+# Moved here because we're not exporting everything anymore.
+run () {
+    fn runner_start
+    disable_blanking
+    stop_compositor
+    if is "${xinit:-}" && ! in_xinit; then
+        fn runner_before_xinit
+        "${arcadia_bin:?}" xinit "$@";
+        fn runner_after_xinit
+    else "$@"; fi
+    restart_compositor
+    restore_blanking
+    fn runner_end
 }
 
 run_game () {
@@ -37,14 +52,13 @@ run_game () {
     start_window_watchers
     
     check_dgpu
-    if is "${dgpu:-}" && ! is "${primex:-}"; then
-        debug_print "Using discrete GPU to play $name."
+    if is "${dgpu:-}" && ! is "${primex:-}" && ! in_optirun; then
+        debug_print "Using discrete GPU to play ${name:-}."
         # Terrible crappy hack. :|
         args=""; for a in "$@"; do args+="\"$a\""; done
         bin optirun -b ${optirun_backend:-primus} \
-          bash -c "game_exec_wrap $args" || \
-        { export DRI_PRIME=1; game_exec_wrap "$@"; }
-    else debug_print "Starting $name."; fn! game_exec "$@"; fi
+          "${arcadia_bin:?}" run_game "$@" || export DRI_PRIME=1
+    else debug_print "Starting ${name:-}."; fn! game_exec "$@"; fi
     
     stop_window_watchers
     stop_padfiler

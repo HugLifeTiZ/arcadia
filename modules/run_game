@@ -11,9 +11,9 @@ find_game "${1:?}"; shift
 check_platform! "$(dirname "$game")"
 load_platform "$(dirname "$game")"
 load_game "$game" || die "Failed to load $game."
-include /tmp/.arcadia-session.meta  # Temporary file that launchers can make.
-include /tmp/arcadia-session.meta  # Temporary file that launchers can make.
+include /tmp/.arcadia-session.meta || true
+include /tmp/arcadia-session.meta || true
 set_runner "${platform:-}"
 [[ "${steam_id:-}" ]] || find_file
-arcadia run run_game "$@"
+run run_game "$@"
 [[ -f /tmp/arcadia-session.meta ]] && rm /tmp/arcadia-session.meta
