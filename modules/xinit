@@ -1,1 +1,41 @@
-arcxinit
+#!/bin/bash
+# Arcadia's xinit starter.
+[[ "${arcadia_path:-}" ]] || { echo "Arcadia not loaded."; exit 1; }
+
+xinit_display=${xinit_display:-:5}
+xinit_vt=${xinit_vt:-09}
+dgpu=${dgpu:-}
+primex=${primex:-}
+declare -a nvidia_config=()
+
+if ! in_xinit; then
+    if is "$dgpu" && is "$primex"; then
+        "${arcadia_bin:?}" nvidia on
+        nvidia_config=(-config xorg.conf.nvidia)
+        #nvver=$(ls /usr/lib | sed -nr 's:^nvidia-([0-9]+)$:\1:p' | tail -1)
+        #modulepath="-modulepath /usr/lib/nvidia-$nvver/xorg,/usr/lib/xorg/modules"
+    fi
+
+    fn runner_before_xinit
+    
+    eval $(pax11publish -i)
+    xinit "${arcadia_bin:?}" xinit "$@" -- "$xinit_display" "vt$xinit_vt" \
+     ${nvidia_config[@]+"${nvidia_config[@]}"} -nolisten tcp -br
+    
+    fn runner_after_xinit
+    if is "$dgpu" && is "$primex"; then "${arcadia_bin:?}" nvidia off; fi
+else
+    export DISPLAY=$xinit_display
+    prime_xrandr
+    fn xinit_start
+    config_outputs
+    start_wm
+    set_background
+    start_tray
+    pax11publish -e
+    disable_blanking
+    debug_print Running "$@"
+    "$@"
+    restore_blanking
+    fn xinit_end
+fi

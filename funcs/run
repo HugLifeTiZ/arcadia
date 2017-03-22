@@ -1,5 +1,5 @@
 #!/bin/bash
-# Functions related to running games.
+# Functions related to running stuff.
 
 # Look for a file to run, checking symlinks and known file extensions.
 declare -a exts
@@ -15,7 +15,7 @@ find_file () {
     [[ ! -f "${dir:-}/$file" ]] && die "Couldn't find game file."
 }
 
-# TODO: replace this with generic gui code.
+# TODO: replace this with use of the gui funcs.
 # Implementation of file selection. run_game rebinds select_game to this.
 _select_file () {
     file=$(yad --center --undecorated --list --no-headers --separator "" \
@@ -23,53 +23,28 @@ _select_file () {
     [[ $? -eq 0 ]] || die "Canceled."
 }
 
-# Returns 0 if optirun is currently in use.
-in_optirun () {
-    pgrep optirun
-}
+# Returns 0 if currently in the extra x server.
+in_xinit () { [[ "${DISPLAY:-}" == "${xinit_display:-:5}" ]]; }
 
-# Moved here because we're not exporting everything anymore. It needs to be
-# able to run in the current shell context.
-run () {
-    fn runner_start
-    disable_blanking
-    stop_compositor
-    if is "${xinit:-}" && ! in_xinit; then
-        fn runner_before_xinit
-        "${arcadia_bin:?}" xinit "$@";
-        fn runner_after_xinit
-    else "$@"; fi
-    restart_compositor
-    restore_blanking
-    fn runner_end
-}
-
-run_game () {
-    cd "${dir:?}"
-    
-    fn game_before
-    
-    start_padfiler
-    start_window_watchers
-    
-    check_dgpu
-    if is "${dgpu:-}" && ! is "${primex:-}" && ! in_optirun; then
-        debug_print "Using discrete GPU to play ${name:-}."
-        bin optirun -b "${optirun_backend:-primus}" \
-          "${arcadia_bin:?}" run_game "$@" || export DRI_PRIME=1
-    else debug_print "Starting ${name:-}."; fn! game_exec "$@"; fi
-    
-    stop_window_watchers
-    stop_padfiler
-    
-    fn game_after
+# Returns 0 if the dgpu is currently in use. Could be smarter about it.
+in_dgpu () {
+    pgrep glxoffload || pgrep optirun || \
+     pgrep -f primusrun || [[ "${DRI_PRIME:-}" ]]
 }
 
 # Overrides dgpu variable to off if on battery.
 check_dgpu () {
     dgpu=${dgpu:-no}
-    [[ "${dgpu,,}" == "force" || $dgpu -eq 2 ]] && { dgpu=yes; return 0; }
+    [[ "${dgpu,,}" == "force" || "$dgpu" == "2" ]] && { dgpu=yes; return 0; }
     check_power || dgpu=no
+}
+
+write_env () {
+    echo > "/run/user/$UID/arcadia/env" <<EOF
+export DISPLAY="${DISPLAY:-}"
+export XAUTHORITY="${XAUTHORITY:-}"
+export PULSE_SERVER="${PULSE_SERVER:-}"
+EOF
 }
 
 # Disable compositor on various WMs if compositing is enabled.
@@ -91,7 +66,7 @@ stop_compositor () {
 # Restart compositor based on what was found in stop_compositor.
 restart_compositor () {
     is "${disable_compositor:-}" || return 0
-    case $compositor in
+    case "${compositor:-}" in
         compton) "${compton_args[@]}" & disown ;;
         xfwm4)
             xfconf-query -c xfwm4 -p /general/use_compositing -t bool -s true ;;
@@ -105,8 +80,8 @@ start_padfiler () {
         debug_print "Starting padfiler: ${padfile:-} ${padfile2:-}"
         padfiler start "${padfile:-}" "${padfile2:-}"
     else
-        [[ "${lock_js:-}" ]] && padfiler lock-js
-        [[ "${lock_event:-}" ]] && padfiler lock-event
+        if [[ "${lock_js:-}" ]]; then padfiler lock-js; fi
+        if [[ "${lock_event:-}" ]]; then padfiler lock-event; fi
     fi
 }
 

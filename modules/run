@@ -1,4 +1,60 @@
 #!/bin/bash
 # Runs an arbitrary command with Arcadia's various conveniences.
-[[ "${arcadia_loaded:-}" ]] || { echo "Arcadia not loaded."; exit 1; }
-run "$@"
+# Also runs a game if it's passed a game meta.
+[[ "${arcadia_path:-}" ]] || { echo "Arcadia not loaded."; exit 1; }
+
+# Add requested overrides.
+pass2=0
+# shellcheck disable=SC2034
+while getopts "d:x:p:2" OPT; do case "$OPT" in
+    d) dgpu="$OPTARG" ;;
+    x) xinit="$OPTARG" ;;
+    p) padfile="$OPTARG" ;;
+    2) pass2=1 ;;  # Runs certain tasks on certain sides of env setup.
+esac; done; shift $((OPTIND-1))
+
+# Figure out if the first argument is a runnable file.
+args=()
+if [[ "${arcadia_game:-}" ]]; then args=(fn game_exec "$@")
+elif [[ ! -x "${1:?}" ]] && ! shh which "${1:?}"; then
+    load_game "${1:?}"; shift
+    export arcadia_game="${game:?}"
+    if is "$pass2"; then args=(fn game_exec "$@"); else args=( "$@" ); fi
+else args=( "$@" ); fi
+
+include "/run/user/$UID/arcadia/session.meta" || true
+check_dgpu
+
+# Assemble wrapper commands.
+wrappers=()
+if is "${xinit:-}" && ! in_xinit; then wrappers+=(module xinit); fi
+if is "${dgpu:-}" && ! in_dgpu; then wrappers+=(module dgpu); fi
+if ! is "$pass2"; then wrappers+=("${arcadia_bin:?}" run -2); fi
+
+# Actually run the thing.
+if ! is "$pass2"; then
+    fn runner_start
+    disable_blanking
+    stop_compositor
+else
+    # If the game has a dir to go to, go there.
+    if [[ -d "${dir:-}" ]]; then cd "${dir:-}"; fi
+    write_env
+    fn game_before
+    start_padfiler
+    start_window_watchers
+fi
+
+debug_print Running "${wrappers[@]:-}" "${args[@]:-}"
+${wrappers[@]+"${wrappers[@]}"} ${args[@]+"${args[@]}"} || true
+
+if is "$pass2"; then
+    stop_window_watchers
+    stop_padfiler
+    fn game_after
+    rm "/run/user/$UID/arcadia/env" || true
+else
+    restart_compositor
+    restore_blanking
+    fn runner_end
+fi

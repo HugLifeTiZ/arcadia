@@ -2,10 +2,6 @@
 
 declare -a xinit_wm
 
-in_xinit () {
-    [[ "${DISPLAY:-}" == "${xinit_display:-:5}" ]] && pgrep -f '[a]rcxinit'
-}
-
 start_wm () {
     debug_print "Starting window manager"
     # User knows best.

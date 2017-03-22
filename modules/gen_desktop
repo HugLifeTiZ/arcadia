@@ -1,6 +1,6 @@
 #!/bin/bash
 # Generates desktop files with copious metadata.
-[[ "${arcadia_loaded:-}" ]] || { echo "Arcadia not loaded."; exit 1; }
+[[ "${arcadia_path:-}" ]] || { echo "Arcadia not loaded."; exit 1; }
 assert -d "${games_dir:-}"
 
 target_dir="${1:-}"
@@ -17,7 +17,7 @@ for pdir in "${games_dir:-}"/*; do
         echo " == Generating files for $(basename "$pdir") == "
         for game in "$pdir"/*; do
             # shellcheck disable=SC2154
-            if load_game "$game"; then
+            if load_game_file "$game"; then
                 echo "Generating file for $name"
                 # shellcheck disable=SC2154
                 gen_desktop "$target_dir/$platform/$base.desktop"

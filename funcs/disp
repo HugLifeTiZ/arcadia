@@ -17,8 +17,8 @@ config_outputs () {
 # If the user has specified a custom mode for it, use it.
 detect_outputs () {
     conn_outputs=($(xrandr | sed -nr 's:^(.*) conn.*:\1:p'))
-    [[ "${outputs[0]}" ]] || local outputs=( "${conn_outputs[@]}" )
-    local output; local main_output=""
+    [[ "${outputs[0]:-}" ]] || local outputs=( "${conn_outputs[@]}" )
+    local output; main_output=""
     for output in "${outputs[@]}"; do
         if echo "${conn_outputs[@]}" | shh grep "$output"; then
             main_output="$output"; break
@@ -26,9 +26,9 @@ detect_outputs () {
     done
     debug_print "Main output detected as $main_output"
     
-    local custom_mode=${modes[${main_output,,}]}
-    debug_print "Using custom mode $custom_mode"
+    local custom_mode=${modes[${main_output,,}]-}
     if [[ "$custom_mode" ]]; then
+     debug_print "Using custom mode $custom_mode"
      xrandr --output "$main_output" --primary --mode "$custom_mode"; else
      xrandr --output "$main_output" --primary --preferred; fi
 }

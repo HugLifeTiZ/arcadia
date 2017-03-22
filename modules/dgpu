@@ -1,0 +1,28 @@
+#!/bin/bash
+# A good thing to use for your Steam game command lines.
+# Maybe run an app on the discrete GPU. Only cares about current Xorg.
+# Falls back to passthrough when on battery unless -f is given or
+# /run/$UID/dgpu exists and contains "force". "disable" forces off.
+# Prority is glxoffload > optirun > DRI_PRIME env var.
+# primusrun is only used when requested.
+[[ "${arcadia_path:-}" ]] || { echo "Arcadia not loaded."; exit 1; }
+
+prefer="${dgpu_prefer:-optirun}"
+backend="${optirun_backend:-primus}"
+
+use_optirun ()     { optirun -b "$backend" "$@"; }
+use_primusrun ()   { primusrun "$@"; }
+use_glxoffload ()  { glxoffload "$@"; }
+use_driprime ()    { export DRI_PRIME=1; "$@"; }
+
+if [[ "$1" == "-f" || "$1" == "--force" ]]; then force=force; shift
+elif [[ -e "/run/user/$UID/dgpu" ]]; then force=$(</run/user/$UID/dgpu); fi
+
+if ( [[ "${force:-}" == "force" ]] || ( check_power && \
+     [[ "${force:-}" != "disable" ]] ) ); then
+    #export LD_PRELOAD='/usr/$LIB/libstdc++.so.6 /usr/$LIB/libgcc_s.so.1 /usr/$LIB/libxcb.so.1'
+    if [[ "$prefer" ]] && bin "$prefer"; then "use_$prefer" "$@"
+    elif bin glxoffload; then use_glxoffload "$@"
+    elif bin optirun; then use_optirun "$@"
+    else use_driprime "$@"; fi
+else "$@"; fi

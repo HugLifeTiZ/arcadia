@@ -15,7 +15,7 @@ yad_select_one () {
      --text-align center --text "<big><b>$label</b></big>" \
      --list --no-headers --column id --column name \
      --print-column 1 --hide-column 1 --limit 1 \
-      "$@" | tr -d '|'
+     "$@" | tr -d '|'
 }
 
 zenity_select_one () {

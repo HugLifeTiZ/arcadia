@@ -204,6 +204,12 @@
             <Menuname>arcadia-nds</Menuname>
             <Menuname>arcadia-psp</Menuname>
             <Separator/>
+            <!-- It's handy to have game managers near the top. -->
+            <Filename>steam.desktop</Filename>
+            <Filename>steam-wine.desktop</Filename>
+            <Filename>retroarch.desktop</Filename>
+            <Filename>gnome-games.desktop</Filename>
+            <Separator/>
             <Merge type="all"/>
         </Layout>
     </Menu>

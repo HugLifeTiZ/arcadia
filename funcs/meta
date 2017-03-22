@@ -4,6 +4,17 @@
 # This function gets redefined when it's time to actually load the game.
 select_file () { true; }
 
+# Loads up the metas for a given game.
+load_game () {
+    game="${1:?}"
+    find_game "$game"
+    check_platform! "$(dirname "$game")"
+    load_platform "$(dirname "$game")"
+    load_game_file "$game" || die "Failed to load $game."
+    set_runner "${platform:-}"
+    if [[ ! "${steam_id:-}" ]]; then find_file; fi
+}
+
 # Finds a game if given only a name.
 find_game () {
     game="$(readlink -f "$1")"
@@ -52,7 +63,7 @@ load_platform () {
     debug_print "Loading platform meta for $platform_dir"
     platform_base="$(basename "$platform_dir")"  # shellcheck disable=SC2034
     get_exts "${platform:-}"
-    include "$platform_dir/arcadia-platform.meta"
+    include "$platform_dir/arcadia-platform.meta" || true
 }
 
 # Get a list of extensions that are associated with the platform to assist
@@ -101,7 +112,7 @@ is_game () {
 }
 
 # Infer information about the game and load metas if present.
-load_game () {
+load_game_file () {
     local game; game=$(readlink -f "${1:-}")
     is_game "$game" || { debug_print "$game is not a game"; return 1; }
     debug_print "Loading game meta for ${1:-}"
@@ -129,7 +140,7 @@ load_game () {
 declare -A img
 find_image () {
     local type="$1"
-    [[ -e "${img[$type]}" ]] && return 0
+    [[ -e "${img[$type]:-}" ]] && return 0
     for e in png jpg gif ico bmp; do
         for n in "$type.$e" ".$type.$e" \
          "arcadia-$type.$e" ".arcadia-$type.$e"; do

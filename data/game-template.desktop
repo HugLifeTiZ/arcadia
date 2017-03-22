@@ -2,7 +2,7 @@
 Type=Application
 Version=1.0
 Name=%name%
-Exec="%arcbin%" run_game "%game%" %F
+Exec="%arcbin%" run "%game%" %F
 Terminal=False
 Icon=%icon%
 Hidden=%hidden%

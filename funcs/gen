@@ -13,13 +13,13 @@ gen_directory () {
 # Generate a desktop file drom data/game-template.desktop.
 gen_desktop () {
     local gen_out=""; local gen_cat=""; local g
-    declare -a genres
-    for g in "${genres[@]}"; do gen_out+="$g;"; gen_cat+="X-Arcadia-$g;"; done
-    find_image icon || icon="arcadia-${platform:-}"
-    find_image boxart
-    find_image screenshot
-    name=${name:-}; game=${game:-}
-    icon=${icon:-}; boxart=${boxart:-}; screenshot=${screenshot:-}
+    declare -a genres; declare -A img
+    for g in "${genres[@]:-}"; do gen_out+="$g;"; gen_cat+="X-Arcadia-$g;"; done
+    find_image icon || img[icon]="arcadia-${platform:-}"
+    find_image boxart || true
+    find_image screenshot || true
+    name=${name:-}; game=${game:-};  icon=${img[icon]:-};
+    boxart=${img[boxart]:-}; screenshot=${img[screenshot]:-}
     sed -e "s|%name%|${name/&/\\&}|g" -e "s|%game%|${game/&/\\&}|g" \
      -e "s|%icon%|${icon/&/\\&}|g" -e "s|%boxart%|${boxart/&/\\&}|g" \
      -e "s|%screenshot%|${screenshot/&/\\&}|g" \
@@ -31,5 +31,6 @@ gen_desktop () {
 
 # Cleans up game variables between each generation to prevent mixing up info.
 clear_game () {
-    unset name genres dgpu padfile icon boxart screenshot hidden
+    unset name genres dgpu padfile hidden
+    unset img[icon] img[boxart] img[screenshot]
 }
