@@ -29,6 +29,26 @@ gen_desktop () {
      "${arcadia_path:?}/data/game-template.desktop" > "$1"
 }
 
+# Check various icon folders for the specified image type.
+declare -A img
+find_image () {
+    local type="$1"
+    [[ -e "${img[$type]:-}" ]] && return 0
+    for e in png jpg gif ico bmp; do
+        for n in "$type.$e" ".$type.$e" \
+         "arcadia-$type.$e" ".arcadia-$type.$e"; do
+            debug_print "Looking for $type: $n in $dir"
+            [[ -e "$dir/$n" ]] && { img[$type]="$dir/$n"; return 0; }
+        done
+        for d in "$dir/${type}s" "$dir/.${type}s"; do
+            debug_print "Looking for $type: ${base:?}.$e in $d"
+            [[ -e "$d/$base.$e" ]] && { img[$type]="$d/$base.$e"; return 0; }
+        done
+    done
+    return 1
+}
+
+
 # Cleans up game variables between each generation to prevent mixing up info.
 clear_game () {
     unset name genres dgpu padfile hidden

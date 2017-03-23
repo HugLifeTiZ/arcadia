@@ -1,15 +1,37 @@
 #!/bin/bash
-# Utility functions.
+# Utility and convenience functions.
 
 # Print to stdout if env vars are enabled.
 debug_print () { if [[ "${ARCADIA_DEBUG:-}" ]]; then echo "DEBUG: $*" >&2; fi; }
 
 die () { echo "FATAL: $*"; exit 1; }
-assert () { test "$@" || die "Assertion $* failed"; }
+assert () { if ! test "$@"; then die "Assertion $* failed"; fi; }
 # Checks to see if a value is any kind of true.
 is () { local a="${1:-}"; [[ "${a,,}" =~ yes|on|true|^[0-9]*[1-9][0-9]*$ ]]; }
 # Shushes a command. All output directed to /dev/null.
 shh () { "$@" >/dev/null 2>&1; }
+
+# Returns true if a value is in the given list.
+val_in_list () {
+    local e
+    for e in "${@:2}"; do [[ "$e" == "${1:-}" ]] && return 0; done
+    return 1
+}
+
+# Converts a title to a filename-friendly name.
+# Not actually used anywhere yet, though...
+sanitize_title () {
+    echo "$@" | cut -d: -f1 | awk -F' - ' '{print $1}' | \
+     tr '[:upper:]' '[:lower:]' | tr -s '[:blank:]' _ | tr -d "'" | \
+     sed -e 's:+:-plus:g' -e 's:&:and:g'
+}
+
+# Check if a number of the given files exist.
+exists () {
+    count=0; targ="${1:?}"; shift
+    for f in "$@"; do if [[ -e "$f" ]]; then ((count++)); fi; done
+    [[ $count -ge 2 ]]
+}
 
 # Checks to see if a user function is set and if so, runs it.
 fn () {
@@ -28,127 +50,4 @@ include () {
         else debug_print "Could not find $incl"; code=1
     fi; done
     return $code
-}
-
-# Run a given arcadia module.
-module () {
-    local module="${1:-}"; shift; [[ "$module" ]] || exit
-    local modules_dir; for modules_dir in "$arcadia_path" \
-     "${XDG_DATA_HOME:-$HOME/.local/share}/arcadia"; do
-     if [[ -e "$modules_dir/modules/$module" ]]; then
-        mod_file=$(readlink -f "$modules_dir/modules/$module")
-        if file "$mod_file" | grep -q "Bourne-Again shell script"; then
-            # If it's a bash script, we source it to run it in the current
-            # context so that nothing needs to be exported.
-            . "$mod_file"; else exec "$mod_file" "$@"
-        fi
-        return 0
-    fi; done
-    die "Module $module not found."
-}
-
-# Find a binary and optionally execute it with args.
-declare -A bins; declare -A aliases
-bin () {
-    local bin=${1:?}; shift
-    if [[ ! -x "${bins[$bin]:-}" ]]; then
-        debug_print "Searching for program: $bin"
-        for alias in $bin ${aliases[$bin]:-}; do
-            bins[$bin]="$(which "$alias")"
-            [[ -x "${bins[$bin]:-}" ]] && break
-        done
-    fi
-    [[ ! -x "${bins[$bin]:-}" ]] && return 1
-    [[ $# -gt 0 ]] && "${bins[$bin]:-}" "$@"
-    return 0  # We don't want to return the program's error code.
-}
-
-# Returns true if a value is in the given list.
-val_in_list () {
-    local e
-    for e in "${@:2}"; do [[ "$e" == "${1:-}" ]] && return 0; done
-    return 1
-}
-
-# Converts a title to a filename-friendly name.
-sanitize_title () {
-    echo "$@" | cut -d: -f1 | awk -F' - ' '{print $1}' | \
-     tr '[:upper:]' '[:lower:]' | tr -s '[:blank:]' - | tr -d "'" | \
-     sed s:+:-plus:g
-}
-
-# Requests a config directory. If it doesn't exist, make it.
-config_dir () {
-    local targ_dir="${XDG_CONFIG_HOME:-$HOME/.config}/${1:-arcadia}"
-    [[ -d "$targ_dir" ]] || mkdir -p "$targ_dir" || \
-     die "Couldn't make ${1:-arcadia} config dir."
-    echo "$targ_dir"
-}
-
-# Requests a data directory. If it doesn't exist, make it.
-data_dir () {
-    local targ_dir="${XDG_DATA_HOME:-$HOME/.local/share}/${1:-arcadia}"
-    [[ -d "$targ_dir" ]] || mkdir -p "$targ_dir" || \
-     die "Couldn't make ${1:-arcadia} data dir."
-    echo "$targ_dir"
-}
-
-# Loads up the user configuration and makes assumptions if info is missing.
-load_config () {
-    conf_dir=$(config_dir arcadia)
-    if [[ ! -f "$conf_dir/config" ]]; then
-        echo "IMPORTANT: No configuration found; assumptions will be made!"
-    fi
-    include "$conf_dir/config" "$conf_dir/bins" "$conf_dir/funcs" \
-     "$conf_dir/runners" "$conf_dir/manual" || true
-    if [[ ! -d "${games_dir:-}" ]]; then
-        debug_print "No games directory defined; assuming $HOME/Games"
-        games_dir="$HOME/Games"
-        [[ ! -d "$games_dir" ]] || mkdir -p "$games_dir"
-    fi
-    if [[ ! -d "${saves_dir:-}" ]]; then
-        debug_print "No saves directory defined; assuming $games_dir/Saves"
-        saves_dir="$games_dir/Saves"
-        [[ ! -d "$saves_dir" ]] || mkdir -p "$saves_dir"
-    fi
-}
-
-# Downloads gamecontrollerdb.txt and adds both it and the user db to the env.
-load_controllers () {
-    if is "${download_controllerdb:-}"; then
-        local tmp; tmp=$(mktemp)
-        if shh wget -O "$tmp" "https://raw.githubusercontent.com/gabomdq/" \
-         +"SDL_GameControllerDB/master/gamecontrollerdb.txt"; then
-         mv "$tmp" "$conf_dir/gamecontrollerdb.txt"; else rm "$tmp"; fi
-    fi
-    local conf_dir; conf_dir=$(config_dir)
-    [[ -f "$conf_dir/gamecontrollerdb.txt" ]] && \
-     SDL_GAMECONTROLLERCONFIG="$SDL_GAMECONTROLLERCONFIG
-$(<"$conf_dir/gamecontrollerdb.txt")"
-    [[ -f "$conf_dir/usercontrollerdb.txt" ]] && \
-     SDL_GAMECONTROLLERCONFIG="$SDL_GAMECONTROLLERCONFIG
-$(<"$conf_dir/usercontrollerdb.txt")"
-    echo "export SDL_GAMECONTROLLERCONFIG=\"$SDL_GAMECONTROLLERCONFIG\"" \
-     >> /tmp/.arcadia_clean_env
-}
-
-# Check to see if the computer is on AC (0) or battery (1).
-check_power () {
-    local ac; ac=$(find /sys/class/power_supply/ | egrep 'AC|ADP' | head -1)
-    local power=""; [[ -e "$ac/online" ]] && power="$(<"$ac/online")"
-    if [[ ! "$power" || "$power" -eq 1 ]]; then
-        debug_print "Computer is on AC"
-        while [[ $# -ge 2 ]]; do
-            declare ${1:?}="${2:?}"
-            shift 3
-        done
-        return 0
-    else
-        debug_print "Computer is on battery"
-        while [[ $# -ge 3 ]]; do
-            declare ${1:?}="${3:?}"
-            shift 3
-        done
-        return 1
-    fi
 }

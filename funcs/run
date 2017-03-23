@@ -1,22 +1,8 @@
 #!/bin/bash
 # Functions related to running stuff.
 
-# Look for a file to run, checking symlinks and known file extensions.
-declare -a exts
-find_file () {
-    [[ -f "${dir:-}/${file:-}" ]] && return 0
-    file="$(basename "$(readlink -f "${dir:-}/arcadia-game")")"
-    [[ -f "${dir:-}/$file" ]] && return 0
-    local e
-    for e in "${exts[@]}"; do
-        file="$(find "${dir:-}" -maxdepth 1 -name "*.$e" -printf "%f\n" | head -n1)"
-        [[ -f "${dir:-}/$file" ]] && return 0
-    done
-    [[ ! -f "${dir:-}/$file" ]] && die "Couldn't find game file."
-}
-
 # TODO: replace this with use of the gui funcs.
-# Implementation of file selection. run_game rebinds select_game to this.
+# Implementation of file selection. The runner rebinds select_game to this.
 _select_file () {
     file=$(yad --center --undecorated --list --no-headers --separator "" \
      --print-column 1 --hide-column 1 --column "File" --column "Name" "$@")

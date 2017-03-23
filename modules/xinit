@@ -18,7 +18,7 @@ if ! in_xinit; then
 
     fn runner_before_xinit
     
-    eval $(pax11publish -i)
+    eval "$(pax11publish -i)"
     xinit "${arcadia_bin:?}" xinit "$@" -- "$xinit_display" "vt$xinit_vt" \
      ${nvidia_config[@]+"${nvidia_config[@]}"} -nolisten tcp -br
     

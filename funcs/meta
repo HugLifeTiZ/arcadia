@@ -100,6 +100,21 @@ get_exts () {
     esac
 }
 
+# Look for a file to run, checking symlinks and known file extensions.
+declare -a exts
+find_file () {
+    [[ -f "${dir:-}/${file:-}" ]] && return 0
+    file="$(basename "$(readlink -f "${dir:-}/arcadia-game")")"
+    [[ -f "${dir:-}/$file" ]] && return 0
+    local e
+    for e in "${exts[@]}"; do
+        file="$(find "${dir:-}" -maxdepth 1 -name "*.$e" -printf "%f\n" | head -n1)"
+        [[ -f "${dir:-}/$file" ]] && return 0
+    done
+    [[ ! -f "${dir:-}/$file" ]] && die "Couldn't find game file."
+}
+
+# Return 0 if the given file or directory is a game.
 is_game () {
     local game; game="$(readlink -f "${1:-}")"
     local base; base="$(basename "$game")"
@@ -134,23 +149,4 @@ load_game_file () {
         [[ "${game##*.}" == "meta" ]] && . "$game"
     else return 1; fi
     return 0
-}
-
-# Check various icon folders for the specified image type.
-declare -A img
-find_image () {
-    local type="$1"
-    [[ -e "${img[$type]:-}" ]] && return 0
-    for e in png jpg gif ico bmp; do
-        for n in "$type.$e" ".$type.$e" \
-         "arcadia-$type.$e" ".arcadia-$type.$e"; do
-            debug_print "Looking for $type: $n in $dir"
-            [[ -e "$dir/$n" ]] && { img[$type]="$dir/$n"; return 0; }
-        done
-        for d in "$dir/${type}s" "$dir/.${type}s"; do
-            debug_print "Looking for $type: $base.$e in $d"
-            [[ -e "$d/$base.$e" ]] && { img[$type]="$d/$base.$e"; return 0; }
-        done
-    done
-    return 1
 }

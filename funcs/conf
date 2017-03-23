@@ -1,0 +1,65 @@
+#!/bin/bash
+# Config processor functions.
+# There are three main use-cases for an config processor. The first is when you
+# want to change the configuration for a game depending on whether you're on
+# power or battery. The second is when an emulator has game-specific options
+# (what up PCSX2). The third is when save data is stored inside the config
+# file and you need to be able to change it based on where it's running
+# (what up Megabyte Punch).
+#
+# To use the config processor, use an array called configs. It will be a list of
+# files to process. Arcadia will first search in that location for a file with
+# the same name but a .pwr or .bat extension appended. If they both exist*, then
+# the one for the correct situation will be merged into the base file. Then
+# the platform directory will be checked both for that pair and for a file that
+# just has the same name, and merge those. Lastly, the game dir will be checked.
+#
+# The .pwr and .bat pair must both exist unless there is a .revert file to
+# revert the config file to a desired state. Config merges are destructive,
+# because otherwise, actual desired config changes common to all situations
+# would be lost.
+
+declare -a configs
+
+# Merges $2 onto $1.
+merge_configs () {
+    local base; base="${1:?}"
+    local ext="${base##*.}"
+    case "$ext" in
+        ini) bin! crudini --merge "$base" < "${2:?}" ;;
+        *)   die "Don't know how to process $ext files yet, sorry." ;;
+    esac
+}
+
+process_inis () {
+    local power="yes"; if ! check_power; then power="no"; fi
+    for conf in ${configs+"${configs[@]}"}; do
+        local confdir; confdir=$(dirname "$conf")
+        local base; base=$(basename "$conf")  # Shadows basename of game
+        for d in "$confdir" "$platform_dir" "$dir"; do
+            # There's no point merging the base config into itself.
+            if [[ "$d" != "$confdir" ]] && [[ -e "$d/$base" ]]; then
+                merge_configs "$conf" "$d/$base"
+            fi
+            if exists 2 "$d/$base.pwr" "$d/$base.bat" "$d/$base.revert"; then
+                if is "$power" && [[ -e "$d/$base.pwr" ]]; then
+                    merge_configs "$conf" "$d/$base.pwr"
+                elif ! is "$power" && [[ -e "$d/base.bat" ]]; then
+                    merge_configs "$conf" "$d/$base.bat"
+                fi
+            fi
+        done
+    done
+}
+
+revert_configs () {
+    for ini in ${configs+"${configs[@]}"}; do
+        local confdir; confdir=$(dirname "$ini")
+        local base; base=$(basename "$conf")
+        for d in "$confdir" "$platform_dir" "$dir"; do
+            if [[ -e "$d/$base.revert" ]]; then
+                merge_configs "$conf" "$d/$base.revert"
+            fi
+        done
+    done
+}
