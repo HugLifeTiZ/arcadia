@@ -21,7 +21,11 @@ in_dgpu () {
 # Overrides dgpu variable to off if on battery.
 check_dgpu () {
     dgpu=${dgpu:-no}
-    [[ "${dgpu,,}" == "force" || "$dgpu" == "2" ]] && { dgpu=yes; return 0; }
+    if [[ "${dgpu,,}" == "force" || "$dgpu" == "2" ]]; then
+        dgpu=yes
+        export dgpu_force=force  # For the dgpu module
+        return 0
+    fi
     check_power || dgpu=no
 }
 

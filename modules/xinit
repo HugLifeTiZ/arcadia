@@ -10,8 +10,11 @@ declare -a nvidia_config=()
 
 if ! in_xinit; then
     if is "$dgpu" && is "$primex"; then
-        "${arcadia_bin:?}" nvidia on
-        nvidia_config=(-config xorg.conf.nvidia)
+        debug_print "Attempting to use Prime X."
+        module nvidia on
+        nv_ver=$(ls /usr/lib | sed -nr 's:^nvidia-([0-9]+)$:\1:p' | tail -1)
+        nvidia_config=(-config xorg.conf.nvidia.bak4)
+         #-modulepath "/usr/lib/nvidia-$nv_ver/xorg,/usr/lib/xorg/modules")
         #nvver=$(ls /usr/lib | sed -nr 's:^nvidia-([0-9]+)$:\1:p' | tail -1)
         #modulepath="-modulepath /usr/lib/nvidia-$nvver/xorg,/usr/lib/xorg/modules"
     fi

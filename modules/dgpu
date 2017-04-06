@@ -10,19 +10,22 @@
 prefer="${dgpu_prefer:-optirun}"
 backend="${optirun_backend:-primus}"
 
-use_optirun ()     { optirun -b "$backend" "$@"; }
-use_primusrun ()   { primusrun "$@"; }
-use_glxoffload ()  { glxoffload "$@"; }
+declare -A aliases
+aliases[glxoffload]="kroki-glxoffload kroki_glxoffload"
+
+use_optirun ()     { bin optirun -b "$backend" "$@"; }
+use_primusrun ()   { bin primusrun "$@"; }
+use_glxoffload ()  { bin kroki-glxoffload "$@"; }
 use_driprime ()    { export DRI_PRIME=1; "$@"; }
 
-if [[ "$1" == "-f" || "$1" == "--force" ]]; then force=force; shift
+if [[ "$1" == "-f" || "$1" == "--force" ]]; then dgpu_force=force; shift
 elif [[ -e "/run/user/$UID/dgpu" ]]; then force=$(</run/user/$UID/dgpu); fi
 
-if ( [[ "${force:-}" == "force" ]] || ( check_power && \
-     [[ "${force:-}" != "disable" ]] ) ); then
+if ( [[ "${dgpu_force:-}" == "force" ]] || ( check_power && \
+     [[ "${dgpu_force:-}" != "disable" ]] ) ); then
     #export LD_PRELOAD='/usr/$LIB/libstdc++.so.6 /usr/$LIB/libgcc_s.so.1 /usr/$LIB/libxcb.so.1'
     if [[ "$prefer" ]] && bin "$prefer"; then "use_$prefer" "$@"
-    elif bin glxoffload; then use_glxoffload "$@"
+    elif bin kroki-glxoffload; then use_glxoffload "$@"
     elif bin optirun; then use_optirun "$@"
     else use_driprime "$@"; fi
 else "$@"; fi

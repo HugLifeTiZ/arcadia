@@ -1,10 +1,14 @@
 #!/bin/bash
 # Turns the discrete GPU on and off on demand. Safer to put this in sudoers.d
 # than its component commands.
-[[ "${arcadia_path:-}" ]] || { echo "Arcadia not loaded."; exit 1; }
 
-fullpath=$(readlink -f "$0")
-[[ $EUID -gt 0 ]] && exec sudo "$fullpath" "$@"
+
+if [[ $EUID -gt 0 ]]; then
+    # This check only happens if it's not being sudo'd.
+    [[ "${arcadia_path:-}" ]] || { echo "Arcadia not loaded."; exit 1; }
+    
+    sudo "${module_file:?}" "$@"
+else
 
 nvidia_ver=$(find /usr/lib | sed -nr 's:^.*nvidia-([0-9]+).*$:\1:p' | tail -1)
 
@@ -24,7 +28,9 @@ query)
     cat /proc/acpi/bbswitch ;;
 install)
     cat > /etc/sudoers.d/arcadia-nvidia <<EOF
-ALL ALL=(ALL) NOPASSWD: $fullpath
+ALL ALL=(ALL) NOPASSWD: $0
 EOF
     ;;
 esac
+
+fi

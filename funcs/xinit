@@ -47,8 +47,10 @@ start_tray () {
 
 # Allows use of the intel outputs when running on the dgpu.
 prime_xrandr () {
-    if ! is "${dgpu:-}" || ! is "${primex:-}"; then return; fi
+    if ! is "${dgpu:-}" || ! is "${primex:-}"; then return 0; fi
     #prime-offload
-    xrandr --setprovideroutputsource modesetting NVIDIA-0
+    xrandr --setprovideroutputsource modesetting NVIDIA-0 || \
+     xrandr --setprovideroutputsource Intel NVIDIA-0 || \
+     die "Failed to set provider output source."
     xrandr --auto
 }
