@@ -41,6 +41,7 @@ else
     if [[ -d "${dir:-}" ]]; then cd "${dir:-}"; fi
     write_env
     fn game_before
+    process_configs
     start_padfiler
     start_window_watchers
 fi
@@ -51,6 +52,7 @@ ${wrappers[@]+"${wrappers[@]}"} ${args[@]+"${args[@]}"} || true
 if is "$pass2"; then
     stop_window_watchers
     stop_padfiler
+    revert_configs
     fn game_after
     rm "/run/user/$UID/arcadia/env" || true
 else

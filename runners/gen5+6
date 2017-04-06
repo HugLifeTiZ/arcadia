@@ -1,11 +1,11 @@
 #!/bin/bash
 
+# shellcheck disable=SC2034
+declare -A aliases=([pcsx]="pcsxr" [pcsx2]="PCSX2")
+
 runner_psx () {
     bin psx "${dir:?}/${file:?}"
 }
-
-# shellcheck disable=SC2034
-declare -A aliases=([pcsx]="pcsxr" [pcsx2]="PCSX2")
 
 runner_pcsx () {
     bin pcsx -nogui -cdfile "${dir:?}/${file:?}"
@@ -21,51 +21,20 @@ runner_mupen64plus () {
 
 runner_pcsx2 () {
     # Default settings.
-    int_res=${int_res:-2}
-    fxaa=${fxaa:-1}
-    anisotropy=${anisotropy:-0}
-    blending=${blending:-1}
-    tex_8bit=${tex_8bit:-1}
-    tex_depth=${tex_depth:-1}
-    hack_half_pixel=${hack_half_pixel:-0}
-    hack_sprite_alpha=${hack_sprite_alpha:-0}
-    hack_sprite_offset=${hack_sprite_offset:-0}
-    hack_sprite_align=${hack_sprite_align:-0}
-    hack_tex_offset=${hack_tex_offset:-0}
-    hack_skip_draw=${hack_skip_draw:-0}
-    hack_preload_frame=${hack_preload_frame:-0}
-    hack_wild_arms=${hack_wild_arms:-0}
-    aspect=${aspect:-4:3}; wspatches=${wspatches:-disabled}
+    local aspect=${aspect:-4:3}; local wspatches=${wspatches:-disabled}
     if is "${widescreen:-}"; then { aspect=16:9; wspatches=enabled; }; fi
-    if is "${software:-}"; then renderer=13; else renderer=12; fi
     
     # Substitutions.
     local inidir="${pcsx2_inidir:-$HOME/.config/PCSX2/inis_1.4.0}"
-    sed -r -i -e 's/(Renderer\s*=\s*).+/\1'"$renderer"'/i' \
-     -e 's/(fxaa\s*=\s*).+/\1'"$fxaa"'/i' \
-     -e 's/(upscale_multiplier\s*=\s*).+/\1'"$int_res"'/i' \
-     -e 's/(MaxAnisotropy\s*=\s*).+/\1'"$anisotropy"'/i' \
-     -e 's/(accurate_blending_unit\s*=\s*).+/\1'"$blending"'/i' \
-     -e 's/(paltex\s*=\s*).+/\1'"$tex_8bit"'/i' \
-     -e 's/(texture_cache_depth\s*=\s*).+/\1'"$tex_depth"'/i' \
-     -e 's/(UserHacks_HalfPixelOffset\s*=\s*).+/\1'"$hack_half_pixel"'/i' \
-     -e 's/(UserHacks_SpriteHack\s*=\s*).+/\1'"$hack_sprite_alpha"'/i' \
-     -e 's/(UserHacks_round_sprite_offset\s*=\s*).+/\1'"$hack_sprite_offset"'/i' \
-     -e 's/(UserHacks_align_sprite_X\s*=\s*).+/\1'"$hack_sprite_align"'/i' \
-     -e 's/(UserHacks_TCOffset\s*=\s*).+/\1'"$hack_tex_offset"'/i' \
-     -e 's/(UserHacks_SkipDraw\s*=\s*).+/\1'"$hack_skip_draw"'/i' \
-     -e 's/(Hacks_ColorDepthClearOverlap\s*=\s*).+/\1'"$hack_preload_frame"'/i' \
-     -e 's/(UserHacks_WildHack\s*=\s*).+/\1'"$hack_wild_arms"'/i' \
-     "$inidir/GSdx.ini"
     sed -r -i -e 's/(EnableWideScreenPatches\s*=\s*).+/\1'"$wspatches"'/i' \
      "$inidir/PCSX2_vm.ini"
     sed -r -i -e 's/(AspectRatio\s*=\s*).+/\1'"$aspect"'/i' \
      "$inidir/PCSX2_ui.ini"
     
     # Start the game.
-    [[ "${gamefixes:-}" ]] && gamefixes="--gamefixes=${gamefixes:-}"
-    bin pcsx2 --nogui "${gamefixes:-}" "${dir:?}/${file:?}"
-    [[ -e "${dir:?}/GSdx.ini" ]] && mv "$inidir/GSdx.ini.bak" "$inidir/GSdx.ini"
+    if [[ "${gamefixes:-}" ]]; then
+        bin pcsx2 "--gamefixes=${gamefixes:-}" --nogui "${dir:?}/${file:?}"
+    else bin pcsx2 --nogui "${dir:?}/${file:?}"; fi
 }
 
 runner_dolphin_emu () {

@@ -23,6 +23,7 @@ declare -a configs
 
 # Merges $2 onto $1.
 merge_configs () {
+    debug_print "Merging ${2:?} into ${1:?}"
     local base; base="${1:?}"
     local ext="${base##*.}"
     case "$ext" in
@@ -31,7 +32,7 @@ merge_configs () {
     esac
 }
 
-process_inis () {
+process_configs () {
     local power="yes"; if ! check_power; then power="no"; fi
     for conf in ${configs+"${configs[@]}"}; do
         local confdir; confdir=$(dirname "$conf")
