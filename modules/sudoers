@@ -1,0 +1,34 @@
+#!/bin/bash
+# Modules that can run as root don't have access to the rest of Arcadia's
+# subsystems because the environment gets cleared pretty much as soon as
+# sudo is invoked. That's a good thing, really, but it is a little bit of
+# a pain in the butt. This convenience module is for adding or removing
+# passwordless sudo for a given module and then warning the user about it.
+
+module=${2:?}
+case "$1" in
+add)
+    if [[ "$(basename "$module")" = "sudoers" ]]; then
+        echo "Oh, *HELL* no. That is way too irresponsible to let you do."
+        exit 1
+    elif [[ ! -e "$module" ]]; then
+        echo "That module doesn't exist, sorry."
+        exit 1
+    fi
+    tmp=$(mktemp)
+    (cat <(echo "ALL ALL=(ALL) NOPASSWD: $module") \
+     "/etc/sudoers.d/arcadia" 2>/dev/null || :) | sort | uniq > "$tmp"
+    sudo mv "$tmp" "/etc/sudoers.d/arcadia"
+    cat <<EOF
+Arcadia just wrote to /etc/sudoers.d/arcadia to allow the $(basename "$module") module to invoke sudo without a password. This module is located at $module. Limiting the sudo scope to the life of a single module is safer and more sensible, but still unsafe by nature. If you have not already, please view this file to verify what it does and confirm that you are comfortable allowing this software to autonomously gain root for the commands described in the module.
+EOF
+    ;;
+remove)
+    sudo sed -i "\\:${module}:d" "/etc/sudoers.d/arcadia"
+    echo "Passwordless sudo has been removed for $(basename "$module")."
+    ;;
+*)
+    echo "I don't know what you want me to do, but no."
+    exit 1
+    ;;
+esac
