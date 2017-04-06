@@ -13,6 +13,7 @@ load_game () {
     load_game_file "$game" || die "Failed to load $game."
     set_runner "${platform:-}"
     if [[ ! "${steam_id:-}" ]]; then find_file; fi
+    export arcadia_game="${game}"
 }
 
 # Finds a game if given only a name.

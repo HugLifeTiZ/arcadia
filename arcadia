@@ -23,6 +23,7 @@ for funcs in "$arcadia_path/runners/"*; do . "$funcs"; done; unset funcs
 load_config
 load_controllers
 if [[ "${arcadia_game:-}" ]]; then
+    debug_print "arcadia_game set, loading $arcadia_game"
     load_game "${arcadia_game:-}"
     include "/run/user/$UID/arcadia/session.meta" || true
 fi

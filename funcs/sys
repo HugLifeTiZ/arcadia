@@ -23,11 +23,11 @@ module () {
     local modules_dir; for modules_dir in "$arcadia_path" \
      "${XDG_DATA_HOME:-$HOME/.local/share}/arcadia"; do
      if [[ -e "$modules_dir/modules/$module" ]]; then
-        mod_file=$(readlink -f "$modules_dir/modules/$module")
-        if file "$mod_file" | grep -q "Bourne-Again shell script"; then
+        module_file=$(readlink -f "$modules_dir/modules/$module")
+        if file "$module_file" | grep -q "Bourne-Again shell script"; then
             # If it's a bash script, we source it to run it in the current
             # context so that nothing needs to be exported.
-            . "$mod_file"; else exec "$mod_file" "$@"
+            . "$module_file"; else exec "$module_file" "$@"
         fi
         return 0
     fi; done

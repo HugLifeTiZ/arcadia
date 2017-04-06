@@ -16,9 +16,8 @@ esac; done; shift $((OPTIND-1))
 # Figure out if the first argument is a runnable file.
 args=()
 if [[ "${arcadia_game:-}" ]]; then args=(fn game_exec "$@")
-elif [[ ! -x "${1:?}" ]] && ! shh which "${1:?}"; then
+elif ( [[ -d "${1:?}" ]] || [[ ! -x "${1:?}" ]] ) && ! shh which "${1:?}"; then
     load_game "${1:?}"; shift
-    export arcadia_game="${game:?}"
     if is "$pass2"; then args=(fn game_exec "$@"); else args=( "$@" ); fi
 else args=( "$@" ); fi
 
