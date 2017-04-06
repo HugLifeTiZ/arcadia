@@ -1,0 +1,28 @@
+#!/bin/bash
+# Modifies the session overrides as requested.
+# Only a certain subset of variables are allowed to be set this way.
+
+# Variables allowed to be set in session config.
+session_vars=(dgpu mode scale_height scale_width)
+session_arrays=(outputs)
+
+unset "${session_vars[@]}" "${session_arrays[@]}"
+var="${1:?}"; shift
+include "/run/user/$UID/arcadia/session" || true
+
+if [[ "$var" == "clear" ]]; then
+    rm "/run/user/$UID/arcadia/session" || true
+    exit
+elif val_in_list "$var" "${session_vars[@]}"; then
+    eval "$var=\"${1:-}\""
+elif val_in_list "$var" "${session_arrays[@]}"; then
+    declare -a $var
+    for e in "$@"; do eval "$var+=(\"$e\")"; done
+else die "Variable $var not allowed in session."; fi
+
+vars="^    $"; for v in "${session_vars[@]}"; do vars+="|^$v="; done
+(
+    set -o posix
+    set | egrep "$vars"
+    set +o posix
+) > "/run/user/$UID/arcadia/session"
