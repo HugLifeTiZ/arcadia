@@ -85,8 +85,7 @@ $(<"$conf_dir/gamecontrollerdb.txt")"
     [[ -f "$conf_dir/usercontrollerdb.txt" ]] && \
      SDL_GAMECONTROLLERCONFIG="$SDL_GAMECONTROLLERCONFIG
 $(<"$conf_dir/usercontrollerdb.txt")"
-    echo "export SDL_GAMECONTROLLERCONFIG=\"$SDL_GAMECONTROLLERCONFIG\"" \
-     >> /tmp/.arcadia_clean_env
+    export SDL_GAMECONTROLLERCONFIG
 }
 
 # Check to see if the computer is on AC (0) or battery (1).

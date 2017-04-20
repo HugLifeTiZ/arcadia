@@ -30,7 +30,8 @@ check_dgpu () {
 }
 
 write_env () {
-    echo > "/run/user/$UID/arcadia/env" <<EOF
+    eval "$(pax11publish -i)"
+    cat > "/run/user/$UID/arcadia/env" <<EOF
 export DISPLAY="${DISPLAY:-}"
 export XAUTHORITY="${XAUTHORITY:-}"
 export PULSE_SERVER="${PULSE_SERVER:-}"
