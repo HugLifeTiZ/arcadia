@@ -1,0 +1,35 @@
+#!/bin/bash
+# Fixes LEDs for xpad driver.
+
+if [[ $EUID -gt 0 ]]; then
+    # This check only happens if it's not being sudo'd.
+    [[ "${arcadia_path:-}" ]] || { echo "Arcadia not loaded."; exit 1; }
+    
+    sudo "${module_file:?}" "$@"
+else
+
+case ${1,,} in
+install)
+    cat > /etc/udev/rules.d/50-xpad-leds.rules <<EOF
+SUBSYSTEM=="input", DRIVERS=="xpad", RUN+="$0"
+EOF
+    "$(dirname "$0")/sudoers" add "$0"
+    udevadm control --reload
+    ;;
+uninstall)
+    rm /etc/udev/rules.d/50-xpad-leds.rules
+    "$(dirname "$0")/sudoers" remove "$0"
+    udevadm control --reload
+    ;;
+*)
+    index=0
+    for led in /sys/class/leds/xpad*; do
+        #light=$((${led//[!0-9]/} % 4 + 6))
+        light=$((index++ % 4 + 6))
+        [[ "$1" == "off" ]] && light=0;
+        echo $light > $led/brightness
+    done
+    ;;
+esac
+
+fi
