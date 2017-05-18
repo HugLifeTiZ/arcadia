@@ -29,7 +29,12 @@ wrappers=()
 if is "${xinit:-}" && ! in_xinit; then wrappers+=(module xinit); fi
 if is "${dgpu:-}" && ! is "${primex:-}" && ! in_dgpu
     then wrappers+=(module dgpu); fi
-if ! is "$pass2"; then wrappers+=("${arcadia_bin:?}" run -2); fi
+if ! is "$pass2"; then
+    wrappers+=("${arcadia_bin:?}" run -2);
+    if [[ "${schedtool_args[0]}" ]]; then
+        wrappers+=(schedtool "${schedtool_args[@]}" -e)
+    fi
+fi
 
 # Actually run the thing.
 if ! is "$pass2"; then
