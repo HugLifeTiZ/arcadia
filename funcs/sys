@@ -80,10 +80,10 @@ load_controllers () {
     fi
     local conf_dir; conf_dir=$(config_dir)
     [[ -f "$conf_dir/gamecontrollerdb.txt" ]] && \
-     SDL_GAMECONTROLLERCONFIG="$SDL_GAMECONTROLLERCONFIG
+     SDL_GAMECONTROLLERCONFIG="${SDL_GAMECONTROLLERCONFIG:-}
 $(<"$conf_dir/gamecontrollerdb.txt")"
     [[ -f "$conf_dir/usercontrollerdb.txt" ]] && \
-     SDL_GAMECONTROLLERCONFIG="$SDL_GAMECONTROLLERCONFIG
+     SDL_GAMECONTROLLERCONFIG="${SDL_GAMECONTROLLERCONFIG:-}
 $(<"$conf_dir/usercontrollerdb.txt")"
     export SDL_GAMECONTROLLERCONFIG
 }
