@@ -6,7 +6,9 @@ xinit_display=${xinit_display:-:5}
 xinit_vt=${xinit_vt:-09}
 dgpu=${dgpu:-}
 primex=${primex:-}
+use_openvt=${use_openvt:-}
 declare -a nvidia_config=()
+declare -a openvt_cmd=()
 
 if ! in_xinit; then
     if is "$dgpu" && is "$primex"; then
@@ -18,12 +20,19 @@ if ! in_xinit; then
         #nvver=$(ls /usr/lib | sed -nr 's:^nvidia-([0-9]+)$:\1:p' | tail -1)
         #modulepath="-modulepath /usr/lib/nvidia-$nvver/xorg,/usr/lib/xorg/modules"
     fi
+    xinit_args=("$xinit_display")
+    if is "$use_openvt"; then
+        openvt_cmd=(openvt -wsl -c "${xinit_vt##+(0)}" --)
+    else xinit_args+=("vt$xinit_vt"); fi
 
     fn runner_before_xinit
     
     eval "$(pax11publish -i)"
-    xinit "${arcadia_bin:?}" xinit "$@" -- "$xinit_display" "vt$xinit_vt" \
+    
+    ${openvt_cmd[@]+"${openvt_cmd[@]}"} xinit \
+     "${arcadia_bin:?}" xinit "$@" -- "${xinit_args[@]}" \
      ${nvidia_config[@]+"${nvidia_config[@]}"} -nolisten tcp -br
+    write_env
     
     fn runner_after_xinit
     if is "$dgpu" && is "$primex"; then "${arcadia_bin:?}" nvidia off; fi

@@ -1,0 +1,26 @@
+#!/bin/bash
+# Put this in an eval "$(arcadia xenv)" to get the environment in which stuff
+# that utilizes X should run. Display, authority, pulse cookie, etc.
+# Run arcadia xenv set at logon to establish the env file for regular x.
+# If arcadia's xinit runs, it will establish a new env file, and then fix
+# the regular X env after it's done.
+[[ "${arcadia_path:-}" ]] || { echo "Arcadia not loaded."; exit 1; }
+
+if [[ "${1:-}" == "set" ]]; then
+    write_env
+else
+    envfile="/run/user/$UID/arcadia/env"
+    if [[ ! -e "$envfile" ]]; then
+        envfile=$(find /run/user -wholename "*arcadia/env" | head -n1)
+    fi
+    if [[ -e "$envfile" ]]; then cat "$envfile"; else
+        # If there is no env file, just assume the current env.
+        eval $(pax11publish -i)
+        cat <<EOF
+export DISPLAY="${DISPLAY:-}"
+export XAUTHORITY="${XAUTHORITY:-}"
+export PULSE_SERVER="${PULSE_SERVER:-}"
+EOF
+    fi
+    echo "pax11publish -e"
+fi
