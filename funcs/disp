@@ -8,8 +8,8 @@ declare -a outputs
 config_outputs () {
     detect_outputs
     detect_mode
-    config_mode
     in_xinit && arrange_outputs
+    config_mode
     (in_xinit || is "${move_mouse:-}") && xdotool mousemove 9999 9999
 }
 
